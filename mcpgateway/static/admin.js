@@ -1,4 +1,7 @@
 /* global marked, DOMPurify, safeReplaceState, _logRestrictedContext, getPaginationParams, buildTableUrl */
+const Admin = window.Admin || {};
+
+/* global marked, DOMPurify */
 const MASKED_AUTH_VALUE = "*****";
 
 // Runtime fallbacks when admin.js is loaded outside admin.html
@@ -28,7 +31,7 @@ window.safeReplaceState =
 // GLOBAL CHART.JS INSTANCE REGISTRY
 // ===================================================================
 // Centralized chart management to prevent "Canvas is already in use" errors
-window.chartRegistry = {
+Admin.chartRegistry = {
     charts: new Map(),
 
     register(id, chart) {
@@ -92,7 +95,7 @@ window.addEventListener("beforeunload", () => {
 });
 
 // Add three fields to passthrough section on Advanced button click
-function handleAddPassthrough() {
+Admin.handleAddPassthrough = function () {
     const passthroughContainer = safeGetElement("passthrough-container");
     if (!passthroughContainer) {
         console.error("Passthrough container not found");
@@ -178,7 +181,7 @@ function handleAddPassthrough() {
 }
 
 // Make URL field read-only for integration type MCP
-function updateEditToolUrl() {
+Admin.updateEditToolUrl = function () {
     const editTypeField = document.getElementById("edit-tool-type");
     const editurlField = document.getElementById("edit-tool-url");
     if (editTypeField && editurlField) {
@@ -413,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // SECURITY: HTML-escape function to prevent XSS attacks
 // ===================================================================
 
-function escapeHtml(unsafe) {
+Admin.escapeHtml = function (unsafe) {
     if (unsafe === null || unsafe === undefined) {
         return "";
     }
@@ -539,7 +542,7 @@ function decodeHtml(html) {
  * @param {string} fallback - Fallback message if no detail found
  * @returns {string} Human-readable error message
  */
-function extractApiError(error, fallback = "An error occurred") {
+Admin.extractApiError = function (error, fallback = "An error occurred") {
     if (!error || (!error.detail && !error.message)) {
         return fallback;
     }
@@ -564,7 +567,7 @@ function extractApiError(error, fallback = "An error occurred") {
  * @param {string} fallback - Fallback message if parsing fails
  * @returns {Promise<string>} Human-readable error message
  */
-async function parseErrorResponse(response, fallback = "An error occurred") {
+Admin.parseErrorResponse = async function (response, fallback = "An error occurred") {
     try {
         const contentType = response.headers.get("content-type") || "";
         if (contentType.includes("application/json")) {
@@ -640,7 +643,7 @@ const MAX_HEADER_VALUE_LENGTH = 4096;
  * @param {string} value - Header value to validate
  * @returns {Object} Validation result with 'valid' boolean and 'error' message
  */
-function validatePassthroughHeader(name, value) {
+Admin.validatePassthroughHeader = function (name, value) {
     // Validate header name
     if (!HEADER_NAME_REGEX.test(name)) {
         return {
@@ -684,7 +687,7 @@ function validatePassthroughHeader(name, value) {
 /**
  * SECURITY: Validate input names to prevent XSS and ensure clean data
  */
-function validateInputName(name, type = "input") {
+Admin.validateInputName = function (name, type = "input") {
     if (!name || typeof name !== "string") {
         return { valid: false, error: `${type} is required` };
     }
@@ -742,7 +745,7 @@ function validateInputName(name, type = "input") {
  */
 
 /**
-function extractContent(content, fallback = "") {
+Admin.extractContent = function (content, fallback = "") {
     if (typeof content === "object" && content !== null) {
         if (content.text !== undefined && content.text !== null) {
             return content.text;
@@ -761,7 +764,7 @@ function extractContent(content, fallback = "") {
 /**
  * SECURITY: Validate URL inputs
  */
-function validateUrl(url, label = "") {
+Admin.validateUrl = function (url, label = "") {
     if (!url || typeof url !== "string") {
         return { valid: false, error: `${label || "URL"} is required` };
     }
@@ -786,7 +789,7 @@ function validateUrl(url, label = "") {
 /**
  * SECURITY: Validate JSON input
  */
-function validateJson(jsonString, fieldName = "JSON") {
+Admin.validateJson = function (jsonString, fieldName = "JSON") {
     if (!jsonString || !jsonString.trim()) {
         return { valid: true, value: {} }; // Empty is OK, defaults to empty object
     }
@@ -806,7 +809,7 @@ function validateJson(jsonString, fieldName = "JSON") {
  * SECURITY: Safely set innerHTML ONLY for trusted backend content
  * For user-generated content, use textContent instead
  */
-function safeSetInnerHTML(element, htmlContent, isTrusted = false) {
+Admin.safeSetInnerHTML = function (element, htmlContent, isTrusted = false) {
     if (!isTrusted) {
         console.error("Attempted to set innerHTML with untrusted content");
         element.textContent = htmlContent; // Fallback to safe text
@@ -845,7 +848,7 @@ function safeSetInnerHTML(element, htmlContent, isTrusted = false) {
  * resetSearch();
  * initSearch();
  */
-function createMemoizedInit(fn, debounceMs = 300, name = "Init") {
+Admin.createMemoizedInit = function (fn, debounceMs = 300, name = "Init") {
     // Closure variables (private state)
     let initialized = false;
     let initializing = false;
@@ -939,7 +942,7 @@ function createMemoizedInit(fn, debounceMs = 300, name = "Init") {
 // ===================================================================
 
 // Check for inative items
-function isInactiveChecked(type) {
+Admin.isInactiveChecked = function (type) {
     const checkbox = safeGetElement(`show-inactive-${type}`);
     return checkbox ? checkbox.checked : false;
 }
@@ -1035,7 +1038,7 @@ function fetchWithTimeout(
 }
 
 // Safe element getter with logging
-function safeGetElement(id, suppressWarning = false) {
+Admin.safeGetElement = function (id, suppressWarning = false) {
     try {
         const element = document.getElementById(id);
         if (!element && !suppressWarning) {
@@ -1049,7 +1052,7 @@ function safeGetElement(id, suppressWarning = false) {
 }
 
 // Enhanced error handler for fetch operations
-function handleFetchError(error, operation = "operation") {
+Admin.handleFetchError = function (error, operation = "operation") {
     console.error(`Error during ${operation}:`, error);
 
     if (error.name === "AbortError") {
@@ -1067,7 +1070,7 @@ function handleFetchError(error, operation = "operation") {
 }
 
 // Show user-friendly error messages
-function showErrorMessage(message, elementId = null) {
+Admin.showErrorMessage = function (message, elementId = null) {
     console.error("Error:", message);
 
     if (elementId) {
@@ -1093,7 +1096,7 @@ function showErrorMessage(message, elementId = null) {
 }
 
 // Show success messages
-function showSuccessMessage(message) {
+Admin.showSuccessMessage = function (message) {
     const successDiv = document.createElement("div");
     successDiv.className =
         "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50";
@@ -1199,13 +1202,13 @@ const AppState = {
 };
 
 // Make state available globally but controlled
-window.AppState = AppState;
+Admin.AppState = AppState;
 
 // ===================================================================
 // ENHANCED MODAL FUNCTIONS with Security and State Management
 // ===================================================================
 
-function openModal(modalId) {
+Admin.openModal = function (modalId) {
     try {
         if (AppState.isModalActive(modalId)) {
             console.warn(`Modal ${modalId} is already active`);
@@ -1244,7 +1247,7 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-function closeModal(modalId, clearId = null) {
+Admin.closeModal = function (modalId, clearId = null) {
     try {
         const modal = safeGetElement(modalId);
         if (!modal) {
@@ -1282,7 +1285,7 @@ function closeModal(modalId, clearId = null) {
     }
 }
 
-function resetModalState(modalId) {
+Admin.resetModalState = function (modalId) {
     try {
         // Clear any dynamic content
         const modalContent = document.querySelector(
@@ -1342,7 +1345,7 @@ const METRICS_RETRY_DELAY = 2000; // Increased from 1500ms
 /**
  * Enhanced metrics loading with better race condition prevention
  */
-async function loadAggregatedMetrics() {
+Admin.loadAggregatedMetrics = async function () {
     const metricsPanel = safeGetElement("metrics-panel", true);
     if (!metricsPanel || metricsPanel.closest(".tab-panel.hidden")) {
         console.log("Metrics panel not visible, skipping load");
@@ -1374,7 +1377,7 @@ async function loadAggregatedMetrics() {
     return metricsRequestPromise;
 }
 
-async function loadMetricsInternal() {
+Admin.loadMetricsInternal = async function () {
     try {
         console.log("Loading aggregated metrics...");
         showMetricsLoading();
@@ -1491,7 +1494,7 @@ async function fetchWithTimeoutAndRetry(
 /**
  * Show loading state for metrics
  */
-function showMetricsLoading() {
+Admin.showMetricsLoading = function () {
     // Only clear the aggregated metrics section, not the entire panel (to preserve System Metrics)
     const aggregatedSection = safeGetElement(
         "aggregated-metrics-section",
@@ -1521,7 +1524,7 @@ function showMetricsLoading() {
 /**
  * Hide loading state for metrics
  */
-function hideMetricsLoading() {
+Admin.hideMetricsLoading = function () {
     const loadingDiv = safeGetElement("metrics-loading", true);
     if (loadingDiv && loadingDiv.parentNode) {
         loadingDiv.parentNode.removeChild(loadingDiv);
@@ -1531,7 +1534,7 @@ function hideMetricsLoading() {
 /**
  * Enhanced error display with retry option
  */
-function showMetricsError(error) {
+Admin.showMetricsError = function (error) {
     // Only show error in the aggregated metrics section, not the entire panel
     const aggregatedSection = safeGetElement("aggregated-metrics-content");
     if (aggregatedSection) {
@@ -1575,7 +1578,7 @@ function showMetricsError(error) {
 /**
  * Retry loading metrics (callable from retry button)
  */
-function retryLoadMetrics() {
+Admin.retryLoadMetrics = function () {
     console.log("Manual retry requested");
     // Reset all tracking variables
     metricsRequestController = null;
@@ -1584,9 +1587,9 @@ function retryLoadMetrics() {
 }
 
 // Make retry function available globally immediately
-window.retryLoadMetrics = retryLoadMetrics;
+Admin.retryLoadMetrics = retryLoadMetrics;
 
-function showMetricsPlaceholder() {
+Admin.showMetricsPlaceholder = function () {
     const aggregatedSection = safeGetElement("aggregated-metrics-section");
     if (aggregatedSection) {
         const placeholderDiv = document.createElement("div");
@@ -1602,7 +1605,7 @@ function showMetricsPlaceholder() {
 // ENHANCED METRICS DISPLAY with Complete System Overview
 // ===================================================================
 
-function displayMetrics(data, retryCount = 0) {
+Admin.displayMetrics = function (data, retryCount = 0) {
     console.log("displayMetrics called with:", data, "retry:", retryCount);
 
     // Ensure parent sections exist, create container if missing
@@ -1775,7 +1778,7 @@ function displayMetrics(data, retryCount = 0) {
  * Switch between Top Performers tabs
  */
 // eslint-disable-next-line no-unused-vars
-function switchTopPerformersTab(entityType) {
+Admin.switchTopPerformersTab = function (entityType) {
     // Hide all panels
     const panels = document.querySelectorAll(".top-performers-panel");
     panels.forEach((panel) => panel.classList.add("hidden"));
@@ -1831,7 +1834,7 @@ function switchTopPerformersTab(entityType) {
  * SECURITY: Create system summary card with safe HTML generation
  */
 // eslint-disable-next-line no-unused-vars
-function createSystemSummaryCard(systemData) {
+Admin.createSystemSummaryCard = function (systemData) {
     try {
         const card = document.createElement("div");
         card.className =
@@ -1925,7 +1928,7 @@ function createSystemSummaryCard(systemData) {
 /**
  * SECURITY: Create KPI section with safe data handling
  */
-function createKPISection(kpiData) {
+Admin.createKPISection = function (kpiData) {
     try {
         const section = document.createElement("div");
         section.className = "grid grid-cols-1 md:grid-cols-4 gap-4";
@@ -2011,7 +2014,7 @@ function createKPISection(kpiData) {
 /**
  * SECURITY: Extract and calculate KPI data with validation
  */
-function formatValue(value, key) {
+Admin.formatValue = function (value, key) {
     if (value === null || value === undefined || value === "N/A") {
         return "N/A";
     }
@@ -2031,7 +2034,7 @@ function formatValue(value, key) {
     return String(value).trim() === "" ? "N/A" : String(value);
 }
 
-function extractKPIData(data) {
+Admin.extractKPIData = function (data) {
     try {
         let totalExecutions = 0;
         let totalSuccessful = 0;
@@ -2161,7 +2164,7 @@ function extractKPIData(data) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function updateKPICards(kpiData) {
+Admin.updateKPICards = function (kpiData) {
     try {
         if (!kpiData) {
             return;
@@ -2337,7 +2340,7 @@ function updateKPICards(kpiData) {
         return document.createElement("div");
     }
 } */
-function calculateSuccessRate(item) {
+Admin.calculateSuccessRate = function (item) {
     // API returns successRate directly as a percentage
     if (item.successRate !== undefined && item.successRate !== null) {
         return Math.round(item.successRate);
@@ -2349,11 +2352,11 @@ function calculateSuccessRate(item) {
     return total > 0 ? Math.round((successful / total) * 100) : 0;
 }
 
-function formatNumber(num) {
+Admin.formatNumber = function (num) {
     return new Intl.NumberFormat().format(num);
 }
 
-function formatLastUsed(timestamp) {
+Admin.formatLastUsed = function (timestamp) {
     if (!timestamp) {
         return "Never";
     }
@@ -2392,7 +2395,7 @@ function formatLastUsed(timestamp) {
 }
 
 /* Unused - part of commented createEnhancedTopPerformersSection
-function createTopPerformersTable(entityType, data, isActive) {
+Admin.createTopPerformersTable = function (entityType, data, isActive) {
     const panel = document.createElement("div");
     panel.id = `top-${entityType}-panel`;
     panel.className = `transition-opacity duration-300 ${isActive ? "opacity-100" : "hidden opacity-0"}`;
@@ -2562,7 +2565,7 @@ function createTopPerformersTable(entityType, data, isActive) {
 */
 
 /* Unused - part of commented createEnhancedTopPerformersSection
-function createTab(type, isActive) {
+Admin.createTab = function (type, isActive) {
     const tab = document.createElement("a");
     tab.href = "#";
     tab.id = `top-${type}-tab`;
@@ -2584,7 +2587,7 @@ function createTab(type, isActive) {
 */
 
 // eslint-disable-next-line no-unused-vars
-function showTopPerformerTab(activeType) {
+Admin.showTopPerformerTab = function (activeType) {
     const entityTypes = [
         "tools",
         "resources",
@@ -2797,7 +2800,7 @@ function createStandardPaginationControls(
 }
 
 // eslint-disable-next-line no-unused-vars
-function updateTableRows(tbody, entityType, data, page, perPage) {
+Admin.updateTableRows = function (tbody, entityType, data, page, perPage) {
     tbody.innerHTML = "";
     const start = (page - 1) * perPage;
     const paginatedData = data.slice(start, start + perPage);
@@ -2891,7 +2894,7 @@ function updateTableRows(tbody, entityType, data, page, perPage) {
 }
 
 /* Unused - part of commented createEnhancedTopPerformersSection
-function exportMetricsToCSV(topData) {
+Admin.exportMetricsToCSV = function (topData) {
     const headers = [
         "Entity Type",
         "Rank",
@@ -2983,7 +2986,7 @@ function exportMetricsToCSV(topData) {
 /**
  * SECURITY: Create performance metrics card with safe display
  */
-function createPerformanceCard(performanceData) {
+Admin.createPerformanceCard = function (performanceData) {
     try {
         const card = document.createElement("div");
         card.className = "bg-white rounded-lg shadow p-6 dark:bg-gray-800";
@@ -3041,7 +3044,7 @@ function createPerformanceCard(performanceData) {
 /**
  * SECURITY: Create recent activity section with safe content handling
  */
-function createRecentActivitySection(activityData) {
+Admin.createRecentActivitySection = function (activityData) {
     try {
         const section = document.createElement("div");
         section.className = "bg-white rounded-lg shadow p-6 dark:bg-gray-800";
@@ -3102,7 +3105,7 @@ function createRecentActivitySection(activityData) {
     }
 }
 
-function createMetricsCard(title, metrics) {
+Admin.createMetricsCard = function (title, metrics) {
     const card = document.createElement("div");
     card.className = "bg-white rounded-lg shadow p-6 dark:bg-gray-800";
 
@@ -3156,7 +3159,7 @@ function createMetricsCard(title, metrics) {
 /**
  * SECURE: Edit Tool function with input validation
  */
-async function editTool(toolId) {
+Admin.editTool = async function (toolId) {
     try {
         console.log(`Editing tool ID: ${toolId}`);
 
@@ -3601,7 +3604,7 @@ async function editTool(toolId) {
  * SECURE: View A2A Agents function with safe display
  */
 
-async function viewAgent(agentId) {
+Admin.viewAgent = async function (agentId) {
     try {
         console.log(`Viewing agent ID: ${agentId}`);
 
@@ -3832,7 +3835,7 @@ async function viewAgent(agentId) {
  * SECURE: Edit A2A Agent function
  */
 
-async function editA2AAgent(agentId) {
+Admin.editA2AAgent = async function (agentId) {
     try {
         console.log(`Editing A2A Agent ID: ${agentId}`);
 
@@ -4163,14 +4166,14 @@ async function editA2AAgent(agentId) {
     }
 }
 
-function safeSetValue(id, val) {
+Admin.safeSetValue = function (id, val) {
     const el = document.getElementById(id);
     if (el) {
         el.value = val;
     }
 }
 
-function toggleA2AAuthFields(authType) {
+Admin.toggleA2AAuthFields = function (authType) {
     const sections = [
         "auth-basic-fields-a2a-edit",
         "auth-bearer-fields-a2a-edit",
@@ -4195,7 +4198,7 @@ function toggleA2AAuthFields(authType) {
 // -------------------- Resource Testing ------------------ //
 
 // ----- URI Template Parsing -------------- //
-function parseUriTemplate(template) {
+Admin.parseUriTemplate = function (template) {
     const regex = /{([^}]+)}/g;
     const fields = [];
     let match;
@@ -4206,7 +4209,7 @@ function parseUriTemplate(template) {
     return fields;
 }
 
-async function testResource(resourceId) {
+Admin.testResource = async function (resourceId) {
     try {
         console.log(`Testing the resource: ${resourceId}`);
 
@@ -4237,7 +4240,7 @@ async function testResource(resourceId) {
     }
 }
 
-function openResourceTestModal(resource) {
+Admin.openResourceTestModal = function (resource) {
     const title = document.getElementById("resource-test-modal-title");
     const fieldsContainer = document.getElementById(
         "resource-test-form-fields",
@@ -4279,11 +4282,11 @@ function openResourceTestModal(resource) {
         `;
     }
 
-    window.CurrentResourceUnderTest = resource;
+    Admin.CurrentResourceUnderTest = resource;
     openModal("resource-test-modal");
 }
 
-async function runResourceTest() {
+Admin.runResourceTest = async function () {
     const resource = window.CurrentResourceUnderTest;
     if (!resource) {
         return;
@@ -4493,7 +4496,7 @@ async function runResourceTest() {
 /**
  * SECURE: View Resource function with safe display
  */
-async function viewResource(resourceId) {
+Admin.viewResource = async function (resourceId) {
     try {
         console.log(`Viewing resource: ${resourceId}`);
 
@@ -4787,7 +4790,7 @@ async function viewResource(resourceId) {
 /**
  * SECURE: Edit Resource function with validation
  */
-async function editResource(resourceId) {
+Admin.editResource = async function (resourceId) {
     try {
         console.log(`Editing resource: ${resourceId}`);
 
@@ -4947,7 +4950,7 @@ async function editResource(resourceId) {
 /**
  * SECURE: View Prompt function with safe display
  */
-async function viewPrompt(promptName) {
+Admin.viewPrompt = async function (promptName) {
     try {
         console.log(`Viewing prompt: ${promptName}`);
 
@@ -5285,7 +5288,7 @@ async function viewPrompt(promptName) {
 /**
  * SECURE: Edit Prompt function with validation
  */
-async function editPrompt(promptId) {
+Admin.editPrompt = async function (promptId) {
     try {
         console.log(`Editing prompt: ${promptId}`);
 
@@ -5455,7 +5458,7 @@ async function editPrompt(promptId) {
 /**
  * SECURE: View Gateway function
  */
-async function viewGateway(gatewayId) {
+Admin.viewGateway = async function (gatewayId) {
     try {
         console.log(`Viewing gateway ID: ${gatewayId}`);
 
@@ -5662,7 +5665,7 @@ async function viewGateway(gatewayId) {
 /**
  * SECURE: Edit Gateway function
  */
-async function editGateway(gatewayId) {
+Admin.editGateway = async function (gatewayId) {
     try {
         console.log(`Editing gateway ID: ${gatewayId}`);
 
@@ -6013,7 +6016,7 @@ async function editGateway(gatewayId) {
 /**
  * SECURE: View Server function
  */
-async function viewServer(serverId) {
+Admin.viewServer = async function (serverId) {
     try {
         console.log(`Viewing server ID: ${serverId}`);
 
@@ -6516,7 +6519,7 @@ async function viewServer(serverId) {
 /**
  * SECURE: Edit Server function
  */
-async function editServer(serverId) {
+Admin.editServer = async function (serverId) {
     try {
         console.log(`Editing server ID: ${serverId}`);
 
@@ -6688,7 +6691,7 @@ async function editServer(serverId) {
         }
 
         // Store server data for modal population
-        window.currentEditingServer = server;
+        Admin.currentEditingServer = server;
 
         // Set associated tools data attribute on the container for reference by initToolSelect
         const editToolsContainer = document.getElementById("edit-server-tools");
@@ -6885,7 +6888,7 @@ async function editServer(serverId) {
 /**
  * SECURE: View Root function with safe display
  */
-async function viewRoot(uri) {
+Admin.viewRoot = async function(uri) {
     try {
         const response = await fetchWithTimeout(
             `${window.ROOT_PATH}/admin/roots/${encodeURIComponent(uri)}`,
@@ -6943,7 +6946,7 @@ async function viewRoot(uri) {
 /**
  * SECURE: Edit Root function with validation
  */
-async function editRoot(uri) {
+Admin.editRoot = async function(uri) {
     try {
         const response = await fetchWithTimeout(
             `${window.ROOT_PATH}/admin/roots/${encodeURIComponent(uri)}`,
@@ -7015,7 +7018,7 @@ async function editRoot(uri) {
 /**
  * Handle export root details
  */
-async function exportRoot(uri) {
+Admin.exportRoot = async function(uri) {
     try {
         const response = await fetchWithTimeout(
             `${window.ROOT_PATH}/admin/roots/export?uri=${encodeURIComponent(uri)}`,
@@ -7055,7 +7058,7 @@ async function exportRoot(uri) {
 }
 
 // Helper function to set edit server associations
-function setEditServerAssociations(server) {
+Admin.setEditServerAssociations = function (server) {
     // Set associated tools checkboxes (scope to edit modal container only)
     const toolContainer = document.getElementById("edit-server-tools");
     const toolCheckboxes = toolContainer
@@ -7137,7 +7140,7 @@ function setEditServerAssociations(server) {
 
 // Set up HTMX handler for auto-checking newly loaded tools when Select All is active or Edit Server mode
 if (window.htmx && !window._toolsHtmxHandlerAttached) {
-    window._toolsHtmxHandlerAttached = true;
+    Admin._toolsHtmxHandlerAttached = true;
 
     window.htmx.on("htmx:afterSettle", function (evt) {
         // Only handle tool pagination requests
@@ -7219,14 +7222,14 @@ if (window.htmx && !window._toolsHtmxHandlerAttached) {
                     );
 
                     if (!window.toolMapping) {
-                        window.toolMapping = {};
+                        Admin.toolMapping = {};
                     }
 
                     newCheckboxes.forEach((cb) => {
                         const toolId = cb.value;
                         const toolName = cb.getAttribute("data-tool-name");
                         if (toolId && toolName) {
-                            window.toolMapping[toolId] = toolName;
+                            Admin.toolMapping[toolId] = toolName;
                         }
                     });
 
@@ -7328,7 +7331,7 @@ if (window.htmx && !window._toolsHtmxHandlerAttached) {
 
 // Set up HTMX handler for auto-checking newly loaded resources when Select All is active
 if (window.htmx && !window._resourcesHtmxHandlerAttached) {
-    window._resourcesHtmxHandlerAttached = true;
+    Admin._resourcesHtmxHandlerAttached = true;
 
     window.htmx.on("htmx:afterSettle", function (evt) {
         // Only handle resource pagination requests
@@ -7466,7 +7469,7 @@ if (window.htmx && !window._resourcesHtmxHandlerAttached) {
 
 // Set up HTMX handler for auto-checking newly loaded prompts when Select All is active
 if (window.htmx && !window._promptsHtmxHandlerAttached) {
-    window._promptsHtmxHandlerAttached = true;
+    Admin._promptsHtmxHandlerAttached = true;
 
     window.htmx.on("htmx:afterSettle", function (evt) {
         // Only handle prompt pagination requests
@@ -7615,58 +7618,11 @@ const ADMIN_ONLY_TABS = new Set([
     "maintenance",
 ]);
 
-function normalizeTabName(tabName) {
-    if (!tabName || typeof tabName !== "string") {
-        return "";
-    }
-    return tabName
-        .replace(/^#/, "")
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "");
-}
-
-function getUiHiddenSections() {
-    const rawHiddenSections = Array.isArray(window.UI_HIDDEN_SECTIONS)
-        ? window.UI_HIDDEN_SECTIONS
-        : [];
-    const hiddenSections = new Set();
-    rawHiddenSections.forEach((section) => {
-        const normalizedSection = normalizeTabName(String(section));
-        if (normalizedSection) {
-            hiddenSections.add(normalizedSection);
-        }
-    });
-    return hiddenSections;
-}
-
-function getUiHiddenTabs() {
-    const rawHiddenTabs = Array.isArray(window.UI_HIDDEN_TABS)
-        ? window.UI_HIDDEN_TABS
-        : [];
-    const hiddenTabs = new Set();
-    rawHiddenTabs.forEach((tab) => {
-        const normalizedTab = normalizeTabName(String(tab));
-        if (normalizedTab) {
-            hiddenTabs.add(normalizedTab);
-        }
-    });
-    return hiddenTabs;
-}
-
-function isTabHidden(tabName) {
-    const normalizedTab = normalizeTabName(tabName);
-    if (!normalizedTab) {
-        return false;
-    }
-    return getUiHiddenTabs().has(normalizedTab);
-}
-
-function isAdminUser() {
+Admin.isAdminUser = function () {
     return Boolean(window.IS_ADMIN);
 }
 
-function isAdminOnlyTab(tabName) {
+Admin.isAdminOnlyTab = function (tabName) {
     return ADMIN_ONLY_TABS.has(tabName);
 }
 
@@ -7700,66 +7656,8 @@ function isTabAvailable(tabName) {
     return panelExists && navExists;
 }
 
-function getDefaultTabName() {
-    const visibleTabs = getVisibleSidebarTabs().filter((tabName) => {
-        if (isTabHidden(tabName)) {
-            return false;
-        }
-        if (!isAdminUser() && isAdminOnlyTab(tabName)) {
-            return false;
-        }
-        return isTabAvailable(tabName);
-    });
-
-    if (visibleTabs.includes("overview")) {
-        return "overview";
-    }
-    if (visibleTabs.includes("gateways")) {
-        return "gateways";
-    }
-    if (visibleTabs.length > 0) {
-        return visibleTabs[0];
-    }
-
-    // Backwards-compatible fallback for minimal DOM states (unit tests, etc).
-    // Previously, the presence of overview-panel alone controlled the default.
-    if (!isTabHidden("overview") && safeGetElement("overview-panel", true)) {
-        return "overview";
-    }
-    return "gateways";
-}
-
-function resolveTabForNavigation(tabName) {
-    const normalizedTab = normalizeTabName(tabName);
-    if (!normalizedTab) {
-        return getDefaultTabName();
-    }
-    if (isTabHidden(normalizedTab)) {
-        return getDefaultTabName();
-    }
-    if (!isAdminUser() && isAdminOnlyTab(normalizedTab)) {
-        return getDefaultTabName();
-    }
-    if (!isTabAvailable(normalizedTab)) {
-        return getDefaultTabName();
-    }
-    return normalizedTab;
-}
-
-function updateHashForTab(tabName) {
-    const normalizedTab = normalizeTabName(tabName);
-    if (!normalizedTab) {
-        return;
-    }
-
-    const desiredHash = `#${normalizedTab}`;
-    if (window.location.hash === desiredHash) {
-        return;
-    }
-
-    const url = new URL(window.location.href);
-    url.hash = desiredHash;
-    safeReplaceState({}, "", url.toString());
+Admin.getDefaultTabName = function () {
+    return safeGetElement("overview-panel", true) ? "overview" : "gateways";
 }
 
 let tabSwitchTimeout = null;
@@ -7769,7 +7667,7 @@ let tabSwitchTimeout = null;
  * by scanning for pagination control elements within that panel.
  * Returns array of table names (e.g., ['tools'], ['servers'], etc.)
  */
-function getTableNamesForTab(tabName) {
+Admin.getTableNamesForTab = function (tabName) {
     const panel = document.getElementById(`${tabName}-panel`);
     if (!panel) {
         return [];
@@ -7798,7 +7696,7 @@ function getTableNamesForTab(tabName) {
  * Keeps only params for the current tab's tables and global params (team_id)
  * Automatically detects which tables belong to the tab by scanning the DOM.
  */
-function cleanUpUrlParamsForTab(targetTabName) {
+Admin.cleanUpUrlParamsForTab = function (targetTabName) {
     const currentUrl = new URL(window.location.href);
     const newParams = new URLSearchParams();
 
@@ -7830,26 +7728,8 @@ function cleanUpUrlParamsForTab(targetTabName) {
     safeReplaceState({}, "", newUrl);
 }
 
-function showTab(tabName) {
+Admin.showTab = function (tabName) {
     try {
-        tabName = normalizeTabName(tabName);
-        if (!tabName) {
-            console.warn("showTab called without a valid tab name");
-            return;
-        }
-
-        if (isTabHidden(tabName)) {
-            const fallbackTab = getDefaultTabName();
-            console.warn(
-                `Blocked navigation to hidden tab "${tabName}", redirecting to "${fallbackTab}"`,
-            );
-            if (fallbackTab && fallbackTab !== tabName) {
-                updateHashForTab(fallbackTab);
-                showTab(fallbackTab);
-            }
-            return;
-        }
-
         if (!isAdminUser() && isAdminOnlyTab(tabName)) {
             console.warn(`Blocked non-admin access to tab: ${tabName}`);
             const fallbackTab = getDefaultTabName();
@@ -8380,7 +8260,7 @@ function showTab(tabName) {
     }
 }
 
-window.showTab = showTab;
+Admin.showTab = showTab;
 // ===================================================================
 // AUTH HANDLING
 // ===================================================================
@@ -8462,7 +8342,7 @@ function handleAuthTypeSelection(
 // ENHANCED SCHEMA GENERATION with Safe State Access
 // ===================================================================
 
-function generateSchema() {
+Admin.generateSchema = function () {
     const schema = {
         title: "CustomInputSchema",
         type: "object",
@@ -8517,7 +8397,7 @@ function generateSchema() {
     return JSON.stringify(schema, null, 2);
 }
 
-function updateSchemaPreview() {
+Admin.updateSchemaPreview = function () {
     try {
         const modeRadio = document.querySelector(
             'input[name="schema_input_mode"]:checked',
@@ -8539,7 +8419,7 @@ function updateSchemaPreview() {
 // ENHANCED PARAMETER HANDLING with Validation
 // ===================================================================
 
-function handleAddParameter() {
+Admin.handleAddParameter = function () {
     const parameterCount = AppState.incrementParameterCount();
     const parametersContainer = safeGetElement("parameters-container");
 
@@ -8591,7 +8471,7 @@ function handleAddParameter() {
     }
 }
 
-function createParameterForm(parameterCount) {
+Admin.createParameterForm = function (parameterCount) {
     const container = document.createElement("div");
 
     // Header with delete button
@@ -8731,7 +8611,7 @@ const integrationRequestMap = {
     MCP: [],
 };
 
-function updateRequestTypeOptions(preselectedValue = null) {
+Admin.updateRequestTypeOptions = function (preselectedValue = null) {
     const requestTypeSelect = safeGetElement("requestType");
     const integrationTypeSelect = safeGetElement("integrationType");
 
@@ -8759,7 +8639,7 @@ function updateRequestTypeOptions(preselectedValue = null) {
     }
 }
 
-function updateEditToolRequestTypes(selectedMethod = null) {
+Admin.updateEditToolRequestTypes = function (selectedMethod = null) {
     const editToolTypeSelect = safeGetElement("edit-tool-type");
     const editToolRequestTypeSelect = safeGetElement("edit-tool-request-type");
     if (!editToolTypeSelect || !editToolRequestTypeSelect) {
@@ -8886,7 +8766,7 @@ function initToolSelect(
     const pillClasses =
         "inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full dark:bg-green-900 dark:text-green-200";
 
-    function update() {
+Admin.update = function () {
         try {
             const checkboxes = container.querySelectorAll(
                 'input[type="checkbox"]',
@@ -9323,7 +9203,7 @@ function initToolSelect(
                             JSON.stringify(persisted),
                         );
                         try {
-                            window._selectedAssociatedTools = persisted.slice();
+                            Admin._selectedAssociatedTools = persisted.slice();
                         } catch (e) {
                             console.error(
                                 "Error persisting window._selectedAssociatedTools:",
@@ -9368,7 +9248,7 @@ function initResourceSelect(
     const pillClasses =
         "inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full shadow dark:text-blue-300 dark:bg-blue-900";
 
-    function update() {
+Admin.update = function () {
         try {
             const checkboxes = container.querySelectorAll(
                 'input[type="checkbox"]',
@@ -9803,7 +9683,7 @@ function initPromptSelect(
     const pillClasses =
         "inline-block px-3 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full shadow dark:text-purple-300 dark:bg-purple-900";
 
-    function update() {
+Admin.update = function () {
         try {
             const checkboxes = container.querySelectorAll(
                 'input[type="checkbox"]',
@@ -10245,7 +10125,7 @@ function initGatewaySelect(
         "inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full dark:bg-indigo-900 dark:text-indigo-200";
 
     // Search functionality
-    function applySearch() {
+Admin.applySearch = function () {
         if (!searchInput) {
             return;
         }
@@ -10291,7 +10171,7 @@ function initGatewaySelect(
         searchInput.dataset.searchBound = "true";
     }
 
-    function update() {
+Admin.update = function () {
         try {
             const checkboxes = container.querySelectorAll(
                 'input[type="checkbox"]',
@@ -10580,7 +10460,7 @@ function initGatewaySelect(
  * Get all selected gateway IDs from the gateway selection container
  * @returns {string[]} Array of selected gateway IDs
  */
-function getSelectedGatewayIds() {
+Admin.getSelectedGatewayIds = function () {
     // Prefer the gateway selection belonging to the currently active form.
     // If the edit-server modal is open, use the edit modal's gateway container
     // (`associatedEditGateways`). Otherwise use the create form container
@@ -10672,7 +10552,7 @@ function getSelectedGatewayIds() {
 /**
  * Reload associated tools, resources, and prompts filtered by selected gateway IDs
  */
-function reloadAssociatedItems() {
+Admin.reloadAssociatedItems = function () {
     const selectedGatewayIds = getSelectedGatewayIds();
     // Join all selected IDs (including the special 'null' sentinel if present)
     // so the server receives a combined filter like `gateway_id=abc,null`.
@@ -11098,7 +10978,7 @@ function reloadAssociatedItems() {
                     ...(window._selectedAssociatedPrompts || []),
                     ...currentCheckedPrompts,
                 ]);
-                window._selectedAssociatedPrompts = Array.from(merged);
+                Admin._selectedAssociatedPrompts = Array.from(merged);
             }
         } catch (e) {
             console.error(
@@ -11212,7 +11092,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // INACTIVE ITEMS HANDLING
 // ===================================================================
 
-function handleToggleSubmit(event, type) {
+Admin.handleToggleSubmit = function (event, type) {
     event.preventDefault();
 
     const isInactiveCheckedBool = isInactiveChecked(type);
@@ -11227,7 +11107,7 @@ function handleToggleSubmit(event, type) {
     form.submit();
 }
 
-function handleSubmitWithConfirmation(event, type) {
+Admin.handleSubmitWithConfirmation = function (event, type) {
     event.preventDefault();
 
     const confirmationMessage = `Are you sure you want to permanently delete this ${type}? (Deactivation is reversible, deletion is permanent)`;
@@ -11239,7 +11119,7 @@ function handleSubmitWithConfirmation(event, type) {
     return handleToggleSubmit(event, type);
 }
 
-function handleDeleteSubmit(event, type, name = "", inactiveType = "") {
+Admin.handleDeleteSubmit = function (event, type, name = "", inactiveType = "") {
     event.preventDefault();
 
     const targetName = name ? `${type} "${name}"` : `this ${type}`;
@@ -11316,7 +11196,7 @@ let toolInputSchemaRegistry = null;
 /**
  * ENHANCED: Tool testing with improved race condition handling
  */
-async function testTool(toolId) {
+Admin.testTool = async function (toolId) {
     try {
         console.log(`Testing tool ID: ${toolId}`);
 
@@ -11503,7 +11383,7 @@ async function testTool(toolId) {
                     const arrayContainer = document.createElement("div");
                     arrayContainer.className = "space-y-2";
 
-                    function createArrayInput(value = "") {
+Admin.createArrayInput = function (value = "") {
                         const wrapper = document.createElement("div");
                         wrapper.className = "flex items-center space-x-2";
 
@@ -11690,10 +11570,7 @@ async function testTool(toolId) {
     }
 }
 
-async function loadTools() {
-    if (getUiHiddenSections().has("tools")) {
-        return;
-    }
+Admin.loadTools = async function () {
     const toolBody = document.getElementById("toolBody");
     console.log("Loading tools...");
     try {
@@ -11796,7 +11673,7 @@ async function loadTools() {
 
 document.addEventListener("DOMContentLoaded", loadTools);
 
-async function enrichTool(toolId) {
+Admin.enrichTool = async function (toolId) {
     try {
         console.log(`Enriching tool ID: ${toolId}`);
         const now = Date.now();
@@ -11953,7 +11830,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function updateSelectedList() {
+Admin.updateSelectedList = function () {
         selectedList.innerHTML = "";
         if (selectedTools.length === 0) {
             selectedList.textContent = "No tools selected";
@@ -11999,7 +11876,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     // Generic API call for Enrich/Validate
-    async function callEnrichment() {
+Admin.callEnrichment = async function () {
         // const selectedTools = getSelectedTools();
 
         if (selectedTools.length === 0) {
@@ -12038,7 +11915,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function openTestCaseModal() {
+Admin.openTestCaseModal = function () {
         if (selectedToolIds.length === 0) {
             showErrorMessage("⚠️ Please select at least one tool.");
             return;
@@ -12053,7 +11930,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .addEventListener("click", generateBulkTestCases);
     }
 
-    async function generateBulkTestCases() {
+Admin.generateBulkTestCases = async function () {
         const testCases = parseInt(
             document.getElementById("gen-bulk-testcase-count").value,
         );
@@ -12100,9 +11977,9 @@ document.addEventListener("DOMContentLoaded", () => {
             showErrorMessage(`❌ Error: ${err.message}`);
         }
     }
-    window.generateBulkTestCases = generateBulkTestCases;
+    Admin.generateBulkTestCases = generateBulkTestCases;
 
-    function clearAllSelections() {
+Admin.clearAllSelections = function () {
         // Uncheck all checkboxes
         document.querySelectorAll(".tool-checkbox").forEach((cb) => {
             cb.checked = false;
@@ -12131,7 +12008,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-async function generateToolTestCases(toolId) {
+Admin.generateToolTestCases = async function (toolId) {
     try {
         console.log(`Generating Test cases for tool ID: ${toolId}`);
         const now = Date.now();
@@ -12208,7 +12085,7 @@ async function generateToolTestCases(toolId) {
     }
 }
 
-async function generateTestCases() {
+Admin.generateTestCases = async function () {
     const testCases = document.getElementById("gen-testcase-count").value;
     const variations = document.getElementById("gen-nl-variation-count").value;
     let toolId;
@@ -12276,7 +12153,7 @@ async function generateTestCases() {
     }
 }
 
-async function validateTool(toolId) {
+Admin.validateTool = async function (toolId) {
     try {
         console.log(`Validating tool ID: ${toolId}`);
 
@@ -12618,7 +12495,7 @@ async function validateTool(toolId) {
                                         document.createElement("div");
                                     arrayContainer.className = "space-y-2";
 
-                                    function createArrayInput(value = "") {
+Admin.createArrayInput = function (value = "") {
                                         const wrapper =
                                             document.createElement("div");
                                         wrapper.className =
@@ -12992,7 +12869,7 @@ async function validateTool(toolId) {
     }
 }
 
-async function runToolValidation(testIndex) {
+Admin.runToolValidation = async function (testIndex) {
     const form = document.querySelector(`#tool-validation-form-${testIndex}`);
     const resultContainer = document.querySelector(
         `#tool-validation-result-${testIndex}`,
@@ -13274,7 +13151,7 @@ async function runToolValidation(testIndex) {
     }
 }
 
-async function runToolAgentValidation(testIndex) {
+Admin.runToolAgentValidation = async function (testIndex) {
     const form = document.querySelector(`#tool-validation-form-${testIndex}`);
     const resultContainer = document.querySelector(
         `#tool-validation-result-${testIndex}`,
@@ -13450,7 +13327,7 @@ async function runToolAgentValidation(testIndex) {
     }
 }
 
-async function runToolTest() {
+Admin.runToolTest = async function () {
     const form = safeGetElement("tool-test-form");
     const loadingElement = safeGetElement("tool-test-loading");
     const resultContainer = safeGetElement("tool-test-result");
@@ -13724,7 +13601,7 @@ async function runToolTest() {
 /**
  * NEW: Cleanup function for tool test state
  */
-function cleanupToolTestState() {
+Admin.cleanupToolTestState = function () {
     // Cancel all active requests
     for (const [toolId, controller] of toolTestState.activeRequests) {
         try {
@@ -13745,7 +13622,7 @@ function cleanupToolTestState() {
 /**
  * NEW: Tool test modal specific cleanup
  */
-function cleanupToolTestModal() {
+Admin.cleanupToolTestModal = function () {
     try {
         // Clear current test tool
         AppState.currentTestTool = null;
@@ -13801,7 +13678,7 @@ const promptTestState = {
 /**
  * Test a prompt by opening the prompt test modal
  */
-async function testPrompt(promptId) {
+Admin.testPrompt = async function (promptId) {
     try {
         console.log(`Testing prompt ID: ${promptId}`);
 
@@ -13934,7 +13811,7 @@ async function testPrompt(promptId) {
 /**
  * Build the form fields for prompt testing based on prompt arguments
  */
-function buildPromptTestForm(prompt) {
+Admin.buildPromptTestForm = function (prompt) {
     const fieldsContainer = safeGetElement("prompt-test-form-fields");
     if (!fieldsContainer) {
         console.error("Prompt test form fields container not found");
@@ -13994,7 +13871,7 @@ function buildPromptTestForm(prompt) {
 /**
  * Run the prompt test by calling the API with the provided arguments
  */
-async function runPromptTest() {
+Admin.runPromptTest = async function () {
     const form = safeGetElement("prompt-test-form");
     const loadingElement = safeGetElement("prompt-test-loading");
     const resultContainer = safeGetElement("prompt-test-result");
@@ -14128,10 +14005,10 @@ async function runPromptTest() {
 /**
  * Clean up resource test modal state
  */
-function cleanupResourceTestModal() {
+Admin.cleanupResourceTestModal = function () {
     try {
         // Clear stored state
-        window.CurrentResourceUnderTest = null;
+        Admin.CurrentResourceUnderTest = null;
 
         // Reset form fields container
         const fieldsContainer = safeGetElement("resource-test-form-fields");
@@ -14164,7 +14041,7 @@ function cleanupResourceTestModal() {
 /**
  * Clean up prompt test modal state
  */
-function cleanupPromptTestModal() {
+Admin.cleanupPromptTestModal = function () {
     try {
         // Clear current test prompt
         promptTestState.currentTestPrompt = null;
@@ -14212,7 +14089,7 @@ let gatewayTestBodyEditor = null;
 let gatewayTestFormHandler = null;
 let gatewayTestCloseHandler = null;
 
-async function testGateway(gatewayURL) {
+Admin.testGateway = async function (gatewayURL) {
     try {
         console.log("Opening gateway test modal for:", gatewayURL);
 
@@ -14295,7 +14172,7 @@ async function testGateway(gatewayURL) {
     }
 }
 
-async function handleGatewayTestSubmit(e) {
+Admin.handleGatewayTestSubmit = async function (e) {
     e.preventDefault();
 
     const loading = safeGetElement("gateway-test-loading");
@@ -14445,7 +14322,7 @@ async function handleGatewayTestSubmit(e) {
     }
 }
 
-function handleGatewayTestClose() {
+Admin.handleGatewayTestClose = function () {
     try {
         // Reset form
         const form = safeGetElement("gateway-test-form");
@@ -14488,7 +14365,7 @@ function handleGatewayTestClose() {
     }
 }
 
-function cleanupGatewayTestModal() {
+Admin.cleanupGatewayTestModal = function () {
     try {
         const form = safeGetElement("gateway-test-form");
         const closeButton = safeGetElement("gateway-test-close");
@@ -14517,7 +14394,7 @@ function cleanupGatewayTestModal() {
 /**
  * SECURE: View Tool function with safe display
  */
-async function viewTool(toolId) {
+Admin.viewTool = async function (toolId) {
     try {
         console.log(`Fetching tool details for ID: ${toolId}`);
 
@@ -14971,7 +14848,7 @@ async function viewTool(toolId) {
 // MISC UTILITY FUNCTIONS
 // ===================================================================
 
-function copyJsonToClipboard(sourceId) {
+Admin.copyJsonToClipboard = function (sourceId) {
     const el = safeGetElement(sourceId);
     if (!el) {
         console.warn(
@@ -14997,13 +14874,13 @@ function copyJsonToClipboard(sourceId) {
 }
 
 // Make it available to inline onclick handlers
-window.copyJsonToClipboard = copyJsonToClipboard;
+Admin.copyJsonToClipboard = copyJsonToClipboard;
 
 // ===================================================================
 // ENHANCED FORM HANDLERS with Input Validation
 // ===================================================================
 
-async function handleGatewayFormSubmit(e) {
+Admin.handleGatewayFormSubmit = async function (e) {
     e.preventDefault();
 
     const form = e.target;
@@ -15131,7 +15008,7 @@ async function handleGatewayFormSubmit(e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#gateways`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -15146,7 +15023,7 @@ async function handleGatewayFormSubmit(e) {
         }
     }
 }
-async function handleResourceFormSubmit(e) {
+Admin.handleResourceFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -15216,7 +15093,7 @@ async function handleResourceFormSubmit(e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#resources`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -15233,7 +15110,7 @@ async function handleResourceFormSubmit(e) {
     }
 }
 
-async function handlePromptFormSubmit(e) {
+Admin.handlePromptFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -15285,7 +15162,7 @@ async function handlePromptFormSubmit(e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#prompts`;
-        window.location.href = redirectUrl;
+        Admin.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         if (status) {
@@ -15301,7 +15178,7 @@ async function handlePromptFormSubmit(e) {
     }
 }
 
-async function handleEditPromptFormSubmit(e) {
+Admin.handleEditPromptFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
 
@@ -15359,14 +15236,14 @@ async function handleEditPromptFormSubmit(e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#prompts`;
-        window.location.href = redirectUrl;
+        Admin.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         showErrorMessage(error.message);
     }
 }
 
-async function handleServerFormSubmit(e) {
+Admin.handleServerFormSubmit = async function (e) {
     e.preventDefault();
 
     const form = e.target;
@@ -15427,7 +15304,7 @@ async function handleServerFormSubmit(e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#catalog`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Add Server Error:", error);
@@ -15444,7 +15321,7 @@ async function handleServerFormSubmit(e) {
 }
 
 // Handle Add A2A Form Submit
-async function handleA2AFormSubmit(e) {
+Admin.handleA2AFormSubmit = async function (e) {
     e.preventDefault();
 
     const form = e.target;
@@ -15556,7 +15433,7 @@ async function handleA2AFormSubmit(e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#a2a-agents`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Add A2A Agent Error:", error);
@@ -15572,7 +15449,7 @@ async function handleA2AFormSubmit(e) {
     }
 }
 
-async function handleToolFormSubmit(event) {
+Admin.handleToolFormSubmit = async function (event) {
     event.preventDefault();
 
     try {
@@ -15656,14 +15533,14 @@ async function handleToolFormSubmit(event) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#tools`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Fetch error:", error);
         showErrorMessage(error.message);
     }
 }
-async function handleEditToolFormSubmit(event) {
+Admin.handleEditToolFormSubmit = async function (event) {
     event.preventDefault();
 
     const form = event.target;
@@ -15726,7 +15603,7 @@ async function handleEditToolFormSubmit(event) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#tools`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Fetch error:", error);
@@ -15735,7 +15612,7 @@ async function handleEditToolFormSubmit(event) {
 }
 
 // Handle Gateway Edit Form
-async function handleEditGatewayFormSubmit(e) {
+Admin.handleEditGatewayFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -15821,7 +15698,7 @@ async function handleEditGatewayFormSubmit(e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#gateways`;
-        window.location.href = redirectUrl;
+        Admin.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         showErrorMessage(error.message);
@@ -15829,7 +15706,7 @@ async function handleEditGatewayFormSubmit(e) {
 }
 
 // Handle A2A Agent Edit Form
-async function handleEditA2AAgentFormSubmit(e) {
+Admin.handleEditA2AAgentFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -15922,14 +15799,14 @@ async function handleEditA2AAgentFormSubmit(e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#a2a-agents`;
-        window.location.href = redirectUrl;
+        Admin.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         showErrorMessage(error.message);
     }
 }
 
-async function handleEditServerFormSubmit(e) {
+Admin.handleEditServerFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -15981,7 +15858,7 @@ async function handleEditServerFormSubmit(e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#catalog`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -15989,7 +15866,7 @@ async function handleEditServerFormSubmit(e) {
     }
 }
 
-async function handleEditResFormSubmit(e) {
+Admin.handleEditResFormSubmit = async function (e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -16056,7 +15933,7 @@ async function handleEditResFormSubmit(e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#resources`;
-            window.location.href = redirectUrl;
+            Admin.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -16176,7 +16053,7 @@ async function handleGrpcServiceFormSubmit(e) {
 // ENHANCED FORM VALIDATION for All Forms
 // ===================================================================
 
-function setupFormValidation() {
+Admin.setupFormValidation = function () {
     // Add validation to all forms on the page
     const forms = document.querySelectorAll("form");
 
@@ -16294,7 +16171,7 @@ function setupFormValidation() {
 // ENHANCED EDITOR REFRESH with Safety Checks
 // ===================================================================
 
-function refreshEditors() {
+Admin.refreshEditors = function () {
     setTimeout(() => {
         if (
             window.headersEditor &&
@@ -16359,7 +16236,7 @@ if (window.performance && window.performance.mark) {
 // ===================================================================
 
 /* global Alpine, htmx */
-function setupTooltipsWithAlpine() {
+Admin.setupTooltipsWithAlpine = function () {
     document.addEventListener("alpine:init", () => {
         console.log("Initializing Alpine tooltip directive...");
 
@@ -16546,7 +16423,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Separate initialization functions
-function initializeCodeMirrorEditors() {
+Admin.initializeCodeMirrorEditors = function () {
     console.log("Initializing CodeMirror editors...");
 
     const editorConfigs = [
@@ -16640,7 +16517,7 @@ function initializeCodeMirrorEditors() {
     });
 }
 
-function initializeToolSelects() {
+Admin.initializeToolSelects = function () {
     console.log("Initializing tool selects...");
 
     // Add Server form
@@ -16702,7 +16579,7 @@ function initializeToolSelects() {
     );
 }
 
-function initializeEventListeners() {
+Admin.initializeEventListeners = function () {
     console.log("🎯 Setting up event listeners...");
 
     setupTabNavigation();
@@ -16715,36 +16592,46 @@ function initializeEventListeners() {
     console.log("✅ All event listeners initialized");
 }
 
-function setupTabNavigation() {
-    const availableTabs = getVisibleSidebarTabs().filter((tabName) => {
-        if (isTabHidden(tabName)) {
-            return false;
-        }
-        if (!isAdminUser() && isAdminOnlyTab(tabName)) {
-            return false;
-        }
-        return isTabAvailable(tabName);
-    });
+Admin.setupTabNavigation = function () {
+    const tabs = [
+        "catalog",
+        "tools",
+        "resources",
+        "prompts",
+        "gateways",
+        "a2a-agents",
+        "roots",
+        "metrics",
+        "plugins",
+        "logs",
+        "export-import",
+        "version-info",
+    ];
 
-    availableTabs.forEach((tabName) => {
-        const tabElement = safeGetElement(`tab-${tabName}`, true);
-        if (!tabElement) {
-            return;
+    const visibleTabs = isAdminUser()
+        ? tabs
+        : tabs.filter((tabName) => !ADMIN_ONLY_TABS.has(tabName));
+
+    visibleTabs.forEach((tabName) => {
+        // Suppress warnings for optional tabs that might not be enabled
+        const optionalTabs = [
+            "roots",
+            "metrics",
+            "logs",
+            "export-import",
+            "version-info",
+            "plugins",
+        ];
+        const suppressWarning = optionalTabs.includes(tabName);
+
+        const tabElement = safeGetElement(`tab-${tabName}`, suppressWarning);
+        if (tabElement) {
+            tabElement.addEventListener("click", () => showTab(tabName));
         }
-        // The sidebar anchors already have inline onclick handlers in admin.html.
-        // Avoid adding a second click handler that would call showTab twice.
-        if (tabElement.hasAttribute("onclick")) {
-            return;
-        }
-        if (tabElement.dataset.tabBound === "true") {
-            return;
-        }
-        tabElement.dataset.tabBound = "true";
-        tabElement.addEventListener("click", () => showTab(tabName));
     });
 }
 
-function setupHTMXHooks() {
+Admin.setupHTMXHooks = function () {
     document.body.addEventListener("htmx:beforeRequest", (event) => {
         if (event.detail.elt.id === "tab-version-info") {
             console.log("HTMX: Sending request for version info partial");
@@ -16758,7 +16645,7 @@ function setupHTMXHooks() {
     });
 }
 
-function setupAuthenticationToggles() {
+Admin.setupAuthenticationToggles = function () {
     const authHandlers = [
         {
             id: "auth-type",
@@ -16843,7 +16730,7 @@ function setupAuthenticationToggles() {
     });
 }
 
-function setupFormHandlers() {
+Admin.setupFormHandlers = function () {
     const gatewayForm = safeGetElement("add-gateway-form");
     if (gatewayForm) {
         gatewayForm.addEventListener("submit", handleGatewayFormSubmit);
@@ -17020,7 +16907,7 @@ function setupFormHandlers() {
 /**
  * Setup search functionality for multi-select dropdowns
  */
-function setupSelectorSearch() {
+Admin.setupSelectorSearch = function () {
     // Tools search - server-side search
     const searchTools = safeGetElement("searchTools", true);
     if (searchTools) {
@@ -17210,7 +17097,7 @@ function setupSelectorSearch() {
 /**
  * Filter server table rows based on search text
  */
-function filterServerTable(searchText) {
+Admin.filterServerTable = function (searchText) {
     try {
         // Try to find the table using multiple strategies
         let tbody = document.querySelector("#servers-table-body");
@@ -17262,12 +17149,12 @@ function filterServerTable(searchText) {
 }
 
 // Make server search function available globally
-window.filterServerTable = filterServerTable;
+Admin.filterServerTable = filterServerTable;
 
 /**
  * Filter Tools table based on search text
  */
-function filterToolsTable(searchText) {
+Admin.filterToolsTable = function (searchText) {
     try {
         const tbody = document.querySelector("#tools-table-body");
         if (!tbody) {
@@ -17312,7 +17199,7 @@ function filterToolsTable(searchText) {
 /**
  * Filter Resources table based on search text
  */
-function filterResourcesTable(searchText) {
+Admin.filterResourcesTable = function (searchText) {
     try {
         const tbody = document.querySelector("#resources-table-body");
         if (!tbody) {
@@ -17351,7 +17238,7 @@ function filterResourcesTable(searchText) {
 /**
  * Filter Prompts table based on search text
  */
-function filterPromptsTable(searchText) {
+Admin.filterPromptsTable = function (searchText) {
     try {
         const tbody = document.querySelector("#prompts-table-body");
         if (!tbody) {
@@ -17390,7 +17277,7 @@ function filterPromptsTable(searchText) {
 /**
  * Filter A2A Agents table based on search text
  */
-function filterA2AAgentsTable(searchText) {
+Admin.filterA2AAgentsTable = function (searchText) {
     try {
         // Try to find the table using multiple strategies
         let tbody = document.querySelector("#agents-table tbody");
@@ -17436,7 +17323,7 @@ function filterA2AAgentsTable(searchText) {
 /**
  * Filter MCP Servers (Gateways) table based on search text
  */
-function filterGatewaysTable(searchText) {
+Admin.filterGatewaysTable = function (searchText) {
     try {
         console.log("🔍 Starting MCP Servers search for:", searchText);
 
@@ -17562,15 +17449,15 @@ function filterGatewaysTable(searchText) {
 }
 
 // Make filter functions available globally
-window.filterServerTable = filterServerTable;
-window.filterToolsTable = filterToolsTable;
-window.filterResourcesTable = filterResourcesTable;
-window.filterPromptsTable = filterPromptsTable;
-window.filterA2AAgentsTable = filterA2AAgentsTable;
-window.filterGatewaysTable = filterGatewaysTable;
+Admin.filterServerTable = filterServerTable;
+Admin.filterToolsTable = filterToolsTable;
+Admin.filterResourcesTable = filterResourcesTable;
+Admin.filterPromptsTable = filterPromptsTable;
+Admin.filterA2AAgentsTable = filterA2AAgentsTable;
+Admin.filterGatewaysTable = filterGatewaysTable;
 
 // Add a test function for debugging
-window.testGatewaySearch = function (searchTerm = "Cou") {
+Admin.testGatewaySearch = function (searchTerm = "Cou") {
     console.log("🧪 Testing gateway search with:", searchTerm);
     console.log("Available tables:", document.querySelectorAll("table").length);
 
@@ -17587,7 +17474,7 @@ window.testGatewaySearch = function (searchTerm = "Cou") {
 };
 
 // Simple fallback search function
-window.simpleGatewaySearch = function (searchTerm) {
+Admin.simpleGatewaySearch = function (searchTerm) {
     console.log("🔧 Simple gateway search for:", searchTerm);
 
     // Find any table in the current tab/page
@@ -17647,7 +17534,7 @@ window.simpleGatewaySearch = function (searchTerm) {
 };
 
 // Add initialization test function
-window.testSearchInit = function () {
+Admin.testSearchInit = function () {
     console.log("🧪 Testing search initialization...");
     initializeSearchInputs();
 };
@@ -17655,179 +17542,43 @@ window.testSearchInit = function () {
 /**
  * Clear search functionality for different entity types
  */
-const PANEL_SEARCH_CONFIG = {
-    catalog: {
-        tableName: "servers",
-        partialPath: "servers/partial",
-        targetSelector: "#servers-table",
-        indicatorSelector: "#servers-loading",
-        searchInputId: "catalog-search-input",
-        tagInputId: "catalog-tag-filter",
-        inactiveCheckboxId: "show-inactive-servers",
-        defaultPerPage: 50,
-    },
-    tools: {
-        tableName: "tools",
-        partialPath: "tools/partial",
-        targetSelector: "#tools-table",
-        indicatorSelector: "#tools-loading",
-        searchInputId: "tools-search-input",
-        tagInputId: "tools-tag-filter",
-        inactiveCheckboxId: "show-inactive-tools",
-        defaultPerPage: 50,
-    },
-    resources: {
-        tableName: "resources",
-        partialPath: "resources/partial",
-        targetSelector: "#resources-table",
-        indicatorSelector: "#resources-loading",
-        searchInputId: "resources-search-input",
-        tagInputId: "resources-tag-filter",
-        inactiveCheckboxId: "show-inactive-resources",
-        defaultPerPage: 50,
-    },
-    prompts: {
-        tableName: "prompts",
-        partialPath: "prompts/partial",
-        targetSelector: "#prompts-table",
-        indicatorSelector: "#prompts-loading",
-        searchInputId: "prompts-search-input",
-        tagInputId: "prompts-tag-filter",
-        inactiveCheckboxId: "show-inactive-prompts",
-        defaultPerPage: 50,
-    },
-    gateways: {
-        tableName: "gateways",
-        partialPath: "gateways/partial",
-        targetSelector: "#gateways-table",
-        indicatorSelector: "#gateways-loading",
-        searchInputId: "gateways-search-input",
-        tagInputId: "gateways-tag-filter",
-        inactiveCheckboxId: "show-inactive-gateways",
-        defaultPerPage: 50,
-    },
-    "a2a-agents": {
-        tableName: "agents",
-        partialPath: "a2a/partial",
-        targetSelector: "#agents-table",
-        indicatorSelector: "#agents-loading",
-        searchInputId: "a2a-agents-search-input",
-        tagInputId: "a2a-agents-tag-filter",
-        inactiveCheckboxId: "show-inactive-a2a-agents",
-        defaultPerPage: 50,
-    },
-};
-
-const panelSearchReloadTimers = {};
-
-function getPanelSearchConfig(entityType) {
-    return PANEL_SEARCH_CONFIG[entityType] || null;
-}
-
-function getPanelSearchStateFromUrl(tableName) {
-    const params = new URLSearchParams(window.location.search);
-    const prefix = `${tableName}_`;
-    return {
-        query: (params.get(prefix + "q") || "").trim(),
-        tags: (params.get(prefix + "tags") || "").trim(),
-    };
-}
-
-function updatePanelSearchStateInUrl(tableName, query, tags) {
-    const currentUrl = new URL(window.location.href);
-    const params = new URLSearchParams(currentUrl.searchParams);
-    const prefix = `${tableName}_`;
-    const normalizedQuery = (query || "").trim();
-    const normalizedTags = (tags || "").trim();
-
-    if (normalizedQuery) {
-        params.set(prefix + "q", normalizedQuery);
-    } else {
-        params.delete(prefix + "q");
-    }
-
-    if (normalizedTags) {
-        params.set(prefix + "tags", normalizedTags);
-    } else {
-        params.delete(prefix + "tags");
-    }
-
-    // Search/filter changes always reset to first page.
-    params.set(prefix + "page", "1");
-
-    const newUrl =
-        currentUrl.pathname +
-        (params.toString() ? `?${params.toString()}` : "") +
-        currentUrl.hash;
-    safeReplaceState({}, "", newUrl);
-}
-
-function getPanelPerPage(panelConfig) {
-    const selector = document.querySelector(
-        `#${panelConfig.tableName}-pagination-controls select`,
-    );
-    if (!selector) {
-        return panelConfig.defaultPerPage;
-    }
-    const parsed = parseInt(selector.value, 10);
-    return Number.isNaN(parsed) ? panelConfig.defaultPerPage : parsed;
-}
-
-function loadSearchablePanel(entityType) {
-    const panelConfig = getPanelSearchConfig(entityType);
-    if (!panelConfig) {
-        return;
-    }
-
-    const searchInput = document.getElementById(panelConfig.searchInputId);
-    const tagInput = document.getElementById(panelConfig.tagInputId);
-    const query = (searchInput?.value || "").trim();
-    const tags = (tagInput?.value || "").trim();
-
-    // Persist search state in namespaced URL params for pagination/shareability.
-    updatePanelSearchStateInUrl(panelConfig.tableName, query, tags);
-
-    const includeInactive = Boolean(
-        document.getElementById(panelConfig.inactiveCheckboxId)?.checked,
-    );
-    const params = new URLSearchParams();
-    params.set("page", "1");
-    params.set("per_page", String(getPanelPerPage(panelConfig)));
-    params.set("include_inactive", includeInactive ? "true" : "false");
-    if (query) {
-        params.set("q", query);
-    }
-    if (tags) {
-        params.set("tags", tags);
-    }
-    const currentTeamId = getCurrentTeamId();
-    if (currentTeamId) {
-        params.set("team_id", currentTeamId);
-    }
-
-    const url = `${window.ROOT_PATH}/admin/${panelConfig.partialPath}?${params.toString()}`;
-    if (window.htmx && window.htmx.ajax) {
-        window.htmx.ajax("GET", url, {
-            target: panelConfig.targetSelector,
-            swap: "outerHTML",
-            indicator: panelConfig.indicatorSelector,
-        });
-    }
-}
-
-function queueSearchablePanelReload(entityType, delayMs = 250) {
-    if (panelSearchReloadTimers[entityType]) {
-        clearTimeout(panelSearchReloadTimers[entityType]);
-    }
-    panelSearchReloadTimers[entityType] = setTimeout(() => {
-        loadSearchablePanel(entityType);
-    }, delayMs);
-}
-
-function clearSearch(entityType) {
+Admin.clearSearch = function (entityType) {
     try {
-        const panelConfig = getPanelSearchConfig(entityType);
-        if (panelConfig) {
+        if (entityType === "catalog") {
+            const searchInput = document.getElementById("catalog-search-input");
+            if (searchInput) {
+                searchInput.value = "";
+                filterServerTable(""); // Clear the filter
+            }
+        } else if (entityType === "tools") {
+            const searchInput = document.getElementById("tools-search-input");
+            if (searchInput) {
+                searchInput.value = "";
+                filterToolsTable(""); // Clear the filter
+            }
+        } else if (entityType === "resources") {
+            const searchInput = document.getElementById(
+                "resources-search-input",
+            );
+            if (searchInput) {
+                searchInput.value = "";
+                filterResourcesTable(""); // Clear the filter
+            }
+        } else if (entityType === "prompts") {
+            const searchInput = document.getElementById("prompts-search-input");
+            if (searchInput) {
+                searchInput.value = "";
+                filterPromptsTable(""); // Clear the filter
+            }
+        } else if (entityType === "a2a-agents") {
+            const searchInput = document.getElementById(
+                "a2a-agents-search-input",
+            );
+            if (searchInput) {
+                searchInput.value = "";
+                filterA2AAgentsTable(""); // Clear the filter
+            }
+        } else if (entityType === "gateways") {
             const searchInput = document.getElementById(
                 panelConfig.searchInputId,
             );
@@ -17887,13 +17638,13 @@ function clearSearch(entityType) {
 }
 
 // Make clearSearch function available globally
-window.clearSearch = clearSearch;
+Admin.clearSearch = clearSearch;
 
 /**
  * Initialize search inputs for all entity types
  * This function also handles re-initialization after HTMX content loads
  */
-function initializeSearchInputs() {
+Admin.initializeSearchInputs = function () {
     console.log("🔍 Initializing search inputs...");
 
     // Clone inputs to remove existing listeners from previous initialization runs.
@@ -18141,103 +17892,39 @@ function openGlobalSearchModal() {
     } else {
         renderGlobalSearchMessage("Start typing to search all entities.");
     }
-}
 
-function closeGlobalSearchModal() {
-    const modal = document.getElementById("global-search-modal");
-    if (!modal) {
-        return;
-    }
-
-    modal.classList.add("hidden");
-    modal.setAttribute("aria-hidden", "true");
-}
-
-function navigateToGlobalSearchResult(button) {
-    if (!button) {
-        return;
-    }
-
-    const entityType = button.dataset.entity;
-    const entityId = button.dataset.id;
-    if (!entityType || !entityId) {
-        return;
-    }
-
-    const config = GLOBAL_SEARCH_ENTITY_CONFIG[entityType];
-    closeGlobalSearchModal();
-    if (!config) {
-        return;
-    }
-
-    showTab(config.tab);
-    const viewFunction = window[config.viewFunction];
-    if (typeof viewFunction === "function") {
-        setTimeout(() => {
-            viewFunction(entityId);
-        }, 120);
-    }
-}
-
-function initializeGlobalSearch() {
-    const input = document.getElementById("global-search-input");
-    if (input && !input.dataset.listenerAttached) {
-        input.dataset.listenerAttached = "true";
-        input.addEventListener("input", (event) => {
-            const value = event.target?.value || "";
-            if (globalSearchDebounceTimer) {
-                clearTimeout(globalSearchDebounceTimer);
-            }
-            globalSearchDebounceTimer = setTimeout(() => {
-                runGlobalSearch(value);
-            }, 220);
+    // A2A Agents search
+    const agentsSearchInput = document.getElementById(
+        "a2a-agents-search-input",
+    );
+    if (agentsSearchInput) {
+        agentsSearchInput.addEventListener("input", function () {
+            filterA2AAgentsTable(this.value);
         });
-
-        input.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                closeGlobalSearchModal();
-                event.preventDefault();
-                return;
-            }
-            if (event.key === "Enter") {
-                const firstResult = document.querySelector(
-                    "#global-search-results .global-search-result-item",
-                );
-                if (firstResult) {
-                    navigateToGlobalSearchResult(firstResult);
-                    event.preventDefault();
-                }
-            }
-        });
+        console.log("✅ A2A Agents search initialized");
     }
 
-    if (!window.__globalSearchHotkeysBound) {
-        window.__globalSearchHotkeysBound = true;
-        document.addEventListener("keydown", (event) => {
-            const isShortcut =
-                (event.ctrlKey || event.metaKey) &&
-                event.key.toLowerCase() === "k";
-            if (isShortcut) {
-                event.preventDefault();
-                openGlobalSearchModal();
-                return;
-            }
-            if (event.key === "Escape") {
-                const modal = document.getElementById("global-search-modal");
-                if (modal && !modal.classList.contains("hidden")) {
-                    closeGlobalSearchModal();
-                    event.preventDefault();
-                }
-            }
+    // Tokens search
+    const tokensSearchInput = document.getElementById("tokens-search-input");
+    if (tokensSearchInput) {
+        tokensSearchInput.addEventListener("input", function () {
+            debouncedServerSideTokenSearch(this.value);
         });
+        console.log("✅ Tokens search initialized");
     }
 }
 
-window.openGlobalSearchModal = openGlobalSearchModal;
-window.closeGlobalSearchModal = closeGlobalSearchModal;
-window.navigateToGlobalSearchResult = navigateToGlobalSearchResult;
+/**
+ * Create memoized version of search inputs initialization
+ * This prevents repeated initialization and provides explicit reset capability
+ */
+const {
+    init: initializeSearchInputsMemoized,
+    debouncedInit: initializeSearchInputsDebounced,
+    reset: resetSearchInputsState,
+} = createMemoizedInit(initializeSearchInputs, 300, "SearchInputs");
 
-function handleAuthTypeChange() {
+Admin.handleAuthTypeChange = function () {
     const authType = this.value;
 
     // Detect form type based on the element ID
@@ -18300,7 +17987,7 @@ function handleAuthTypeChange() {
     }
 }
 
-function handleOAuthGrantTypeChange() {
+Admin.handleOAuthGrantTypeChange = function () {
     const grantType = this.value;
 
     // Detect form type (a2a or gw) from the triggering element ID
@@ -18368,7 +18055,7 @@ function handleOAuthGrantTypeChange() {
     }
 }
 
-function handleEditOAuthGrantTypeChange() {
+Admin.handleEditOAuthGrantTypeChange = function () {
     const grantType = this.value;
 
     // Detect prefix dynamically (supports both gw-edit and a2a-edit)
@@ -18427,7 +18114,7 @@ function handleEditOAuthGrantTypeChange() {
     }
 }
 
-function setupSchemaModeHandlers() {
+Admin.setupSchemaModeHandlers = function () {
     const schemaModeRadios = document.getElementsByName("schema_input_mode");
     const uiBuilderDiv = safeGetElement("ui-builder");
     const jsonInputContainer = safeGetElement("json-input-container");
@@ -18465,7 +18152,7 @@ function setupSchemaModeHandlers() {
     console.log("✓ Schema mode handlers set up successfully");
 }
 
-function setupIntegrationTypeHandlers() {
+Admin.setupIntegrationTypeHandlers = function () {
     const integrationTypeSelect = safeGetElement("integrationType");
     if (integrationTypeSelect) {
         const defaultIntegration =
@@ -18488,9 +18175,7 @@ function setupIntegrationTypeHandlers() {
     }
 }
 
-let tabHashChangeListenerRegistered = false;
-
-function initializeTabState() {
+Admin.initializeTabState = function () {
     console.log("Initializing tab state...");
 
     const initialHashTab = normalizeTabName(window.location.hash);
@@ -18649,7 +18334,7 @@ function initializeTabState() {
 /**
  * Load servers (Virtual Servers / Catalog) with optional include_inactive parameter
  */
-async function loadServers() {
+Admin.loadServers = async function () {
     const checkbox = safeGetElement("show-inactive-servers");
     const includeInactive = checkbox ? checkbox.checked : false;
 
@@ -18663,40 +18348,40 @@ async function loadServers() {
 
     // Reload the page with the updated parameters
     // Since the catalog panel is server-side rendered, we need a full page reload
-    window.location.href = url.toString();
+    Admin.location.href = url.toString();
 }
 
-window.loadServers = loadServers;
-window.handleToggleSubmit = handleToggleSubmit;
-window.handleSubmitWithConfirmation = handleSubmitWithConfirmation;
-window.handleDeleteSubmit = handleDeleteSubmit;
-window.viewTool = viewTool;
-window.editTool = editTool;
-window.testTool = testTool;
-window.validateTool = validateTool;
-window.viewResource = viewResource;
-window.runResourceTest = runResourceTest;
-window.testResource = testResource;
-window.editResource = editResource;
-window.viewPrompt = viewPrompt;
-window.editPrompt = editPrompt;
-window.viewGateway = viewGateway;
-window.editGateway = editGateway;
-window.viewServer = viewServer;
-window.editServer = editServer;
-window.viewAgent = viewAgent;
-window.editA2AAgent = editA2AAgent;
-window.runToolTest = runToolTest;
-window.testPrompt = testPrompt;
-window.runPromptTest = runPromptTest;
-window.closeModal = closeModal;
-window.testGateway = testGateway;
-window.generateToolTestCases = generateToolTestCases;
-window.generateTestCases = generateTestCases;
-window.enrichTool = enrichTool;
-window.viewRoot = viewRoot;
-window.editRoot = editRoot;
-window.exportRoot = exportRoot;
+Admin.loadServers = loadServers;
+Admin.handleToggleSubmit = handleToggleSubmit;
+Admin.handleSubmitWithConfirmation = handleSubmitWithConfirmation;
+Admin.handleDeleteSubmit = handleDeleteSubmit;
+Admin.viewTool = viewTool;
+Admin.editTool = editTool;
+Admin.testTool = testTool;
+Admin.validateTool = validateTool;
+Admin.viewResource = viewResource;
+Admin.runResourceTest = runResourceTest;
+Admin.testResource = testResource;
+Admin.editResource = editResource;
+Admin.viewPrompt = viewPrompt;
+Admin.editPrompt = editPrompt;
+Admin.viewGateway = viewGateway;
+Admin.editGateway = editGateway;
+Admin.viewServer = viewServer;
+Admin.editServer = editServer;
+Admin.viewAgent = viewAgent;
+Admin.editA2AAgent = editA2AAgent;
+Admin.runToolTest = runToolTest;
+Admin.testPrompt = testPrompt;
+Admin.runPromptTest = runPromptTest;
+Admin.closeModal = closeModal;
+Admin.testGateway = testGateway;
+Admin.generateToolTestCases = generateToolTestCases;
+Admin.generateTestCases = generateTestCases;
+Admin.enrichTool = enrichTool;
+Admin.viewRoot = viewRoot;
+Admin.editRoot = editRoot;
+Admin.exportRoot = exportRoot;
 
 // ===============================================
 // CONFIG EXPORT FUNCTIONALITY
@@ -18715,7 +18400,7 @@ let currentServerId = null;
  * @param {string} serverId - The server UUID
  * @param {string} serverName - The server name
  */
-function showConfigSelectionModal(serverId, serverName) {
+Admin.showConfigSelectionModal = function (serverId, serverName) {
     currentServerId = serverId;
     currentServerName = serverName;
 
@@ -18731,7 +18416,7 @@ function showConfigSelectionModal(serverId, serverName) {
  * @param {Object} server
  * @returns {string}
  */
-function getCatalogUrl(server) {
+Admin.getCatalogUrl = function (server) {
     const currentHost = window.location.hostname;
     const currentPort =
         window.location.port ||
@@ -18749,7 +18434,7 @@ function getCatalogUrl(server) {
  * Generate and show configuration for selected type
  * @param {string} configType - Configuration type: 'stdio', 'sse', or 'http'
  */
-async function generateAndShowConfig(configType) {
+Admin.generateAndShowConfig = async function (configType) {
     try {
         console.log(
             `Generating ${configType} config for server ${currentServerId}`,
@@ -18790,7 +18475,7 @@ async function generateAndShowConfig(configType) {
  * @param {string} serverId - The server UUID
  * @param {string} configType - Configuration type: 'stdio', 'sse', or 'http'
  */
-async function exportServerConfig(serverId, configType) {
+Admin.exportServerConfig = async function (serverId, configType) {
     try {
         console.log(`Exporting ${configType} config for server ${serverId}`);
 
@@ -18830,7 +18515,7 @@ async function exportServerConfig(serverId, configType) {
  * @param {string} configType - Configuration type
  * @returns {Object} - Generated configuration object
  */
-function generateConfig(server, configType) {
+Admin.generateConfig = function (server, configType) {
     const currentHost = window.location.hostname;
     const currentPort =
         window.location.port ||
@@ -18898,7 +18583,7 @@ function generateConfig(server, configType) {
  * @param {string} configType - Configuration type
  * @param {Object} config - Generated configuration
  */
-function showConfigDisplayModal(server, configType, config) {
+Admin.showConfigDisplayModal = function (server, configType, config) {
     const descriptions = {
         stdio: "Configuration for Claude Desktop, CLI tools, and stdio-based MCP clients",
         sse: "Configuration for LangChain, LlamaIndex, and other SSE-based frameworks",
@@ -18939,7 +18624,7 @@ function showConfigDisplayModal(server, configType, config) {
 /**
  * Copy configuration to clipboard
  */
-async function copyConfigToClipboard() {
+Admin.copyConfigToClipboard = async function () {
     try {
         const contentEl = safeGetElement("config-content");
         if (!contentEl) {
@@ -18966,7 +18651,7 @@ async function copyConfigToClipboard() {
 /**
  * Download configuration as JSON file
  */
-function downloadConfig() {
+Admin.downloadConfig = function () {
     if (!currentConfigData || !currentConfigType || !currentServerName) {
         showErrorMessage("No configuration data available");
         return;
@@ -18995,18 +18680,18 @@ function downloadConfig() {
 /**
  * Go back to config selection modal
  */
-function goBackToSelection() {
+Admin.goBackToSelection = function () {
     closeModal("config-display-modal");
     openModal("config-selection-modal");
 }
 
 // Export functions to global scope immediately after definition
-window.showConfigSelectionModal = showConfigSelectionModal;
-window.generateAndShowConfig = generateAndShowConfig;
-window.exportServerConfig = exportServerConfig;
-window.copyConfigToClipboard = copyConfigToClipboard;
-window.downloadConfig = downloadConfig;
-window.goBackToSelection = goBackToSelection;
+Admin.showConfigSelectionModal = showConfigSelectionModal;
+Admin.generateAndShowConfig = generateAndShowConfig;
+Admin.exportServerConfig = exportServerConfig;
+Admin.copyConfigToClipboard = copyConfigToClipboard;
+Admin.downloadConfig = downloadConfig;
+Admin.goBackToSelection = goBackToSelection;
 
 // ===============================================
 // TAG FILTERING FUNCTIONALITY
@@ -19017,7 +18702,7 @@ window.goBackToSelection = goBackToSelection;
  * @param {string} entityType - The entity type (tools, resources, prompts, servers, gateways)
  * @returns {Array<string>} - Array of unique tags
  */
-function extractAvailableTags(entityType) {
+Admin.extractAvailableTags = function (entityType) {
     const tags = new Set();
     const tableSelector = `#${entityType}-panel tbody tr:not(.inactive-row)`;
     const rows = document.querySelectorAll(tableSelector);
@@ -19102,7 +18787,7 @@ function extractAvailableTags(entityType) {
  * Update the available tags display for an entity type
  * @param {string} entityType - The entity type
  */
-function updateAvailableTags(entityType) {
+Admin.updateAvailableTags = function (entityType) {
     const availableTagsContainer = document.getElementById(
         `${entityType}-available-tags`,
     );
@@ -19136,7 +18821,7 @@ function updateAvailableTags(entityType) {
  * @param {string} entityType - The entity type
  * @param {string} tag - The tag to add
  */
-function addTagToFilter(entityType, tag) {
+Admin.addTagToFilter = function (entityType, tag) {
     const filterInput = document.getElementById(`${entityType}-tag-filter`);
     if (!filterInput) {
         return;
@@ -19162,7 +18847,7 @@ function addTagToFilter(entityType, tag) {
  * @param {string} entityType - The entity type (tools, resources, prompts, servers, gateways)
  * @param {string} tagsInput - Comma-separated string of tags to filter by
  */
-function filterEntitiesByTags(entityType, tagsInput) {
+Admin.filterEntitiesByTags = function (entityType, tagsInput) {
     const filterTags = tagsInput
         .split(",")
         .map((tag) => tag.trim().toLowerCase())
@@ -19237,7 +18922,7 @@ function filterEntitiesByTags(entityType, tagsInput) {
  * @param {number} visibleCount - Number of visible entities
  * @param {boolean} isFiltering - Whether filtering is active
  */
-function updateFilterEmptyState(entityType, visibleCount, isFiltering) {
+Admin.updateFilterEmptyState = function (entityType, visibleCount, isFiltering) {
     const tableContainer = document.querySelector(
         `#${entityType}-panel .overflow-x-auto`,
     );
@@ -19275,7 +18960,7 @@ function updateFilterEmptyState(entityType, visibleCount, isFiltering) {
  * Clear the tag filter for an entity type
  * @param {string} entityType - The entity type
  */
-function clearTagFilter(entityType) {
+Admin.clearTagFilter = function (entityType) {
     const filterInput = document.getElementById(`${entityType}-tag-filter`);
     if (filterInput) {
         filterInput.value = "";
@@ -19290,7 +18975,7 @@ function clearTagFilter(entityType) {
 /**
  * Initialize tag filtering for all entity types on page load
  */
-function initializeTagFiltering() {
+Admin.initializeTagFiltering = function () {
     const entityTypes = [
         "catalog",
         "tools",
@@ -19326,9 +19011,9 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Expose tag filtering functions to global scope
-window.filterEntitiesByTags = filterEntitiesByTags;
-window.clearTagFilter = clearTagFilter;
-window.updateAvailableTags = updateAvailableTags;
+Admin.filterEntitiesByTags = filterEntitiesByTags;
+Admin.clearTagFilter = clearTagFilter;
+Admin.updateAvailableTags = updateAvailableTags;
 
 // ===================================================================
 // MULTI-HEADER AUTHENTICATION MANAGEMENT
@@ -19343,7 +19028,7 @@ window.updateAvailableTags = updateAvailableTags;
  * for newly entered values, not for existing credentials stored in the database.
  * This is intentional - stored secrets are write-only for security.
  */
-function toggleInputMask(inputOrId, button) {
+Admin.toggleInputMask = function (inputOrId, button) {
     const input =
         typeof inputOrId === "string"
             ? document.getElementById(inputOrId)
@@ -19394,7 +19079,7 @@ function toggleInputMask(inputOrId, button) {
     }
 }
 
-window.toggleInputMask = toggleInputMask;
+Admin.toggleInputMask = toggleInputMask;
 
 /**
  * Global counter for unique header IDs
@@ -19405,7 +19090,7 @@ let headerCounter = 0;
  * Add a new authentication header row to the specified container
  * @param {string} containerId - ID of the container to add the header row to
  */
-function addAuthHeader(containerId, options = {}) {
+Admin.addAuthHeader = function (containerId, options = {}) {
     const container = document.getElementById(containerId);
     if (!container) {
         console.error(`Container with ID ${containerId} not found`);
@@ -19499,7 +19184,7 @@ function addAuthHeader(containerId, options = {}) {
  * @param {string} headerId - ID of the header row to remove
  * @param {string} containerId - ID of the container to update
  */
-function removeAuthHeader(headerId, containerId) {
+Admin.removeAuthHeader = function (headerId, containerId) {
     const headerRow = document.getElementById(headerId);
     if (headerRow) {
         headerRow.remove();
@@ -19511,7 +19196,7 @@ function removeAuthHeader(headerId, containerId) {
  * Update the JSON representation of authentication headers
  * @param {string} containerId - ID of the container with headers
  */
-function updateAuthHeadersJSON(containerId) {
+Admin.updateAuthHeadersJSON = function (containerId) {
     const container = document.getElementById(containerId);
     if (!container) {
         return;
@@ -19625,7 +19310,7 @@ function updateAuthHeadersJSON(containerId) {
  * @param {string} containerId - ID of the container to populate
  * @param {Array} headers - Array of header objects with key and value properties
  */
-function loadAuthHeaders(containerId, headers, options = {}) {
+Admin.loadAuthHeaders = function (containerId, headers, options = {}) {
     const container = document.getElementById(containerId);
     if (!container) {
         return;
@@ -19682,17 +19367,17 @@ function loadAuthHeaders(containerId, headers, options = {}) {
 }
 
 // Expose authentication header functions to global scope
-window.addAuthHeader = addAuthHeader;
-window.removeAuthHeader = removeAuthHeader;
-window.updateAuthHeadersJSON = updateAuthHeadersJSON;
-window.loadAuthHeaders = loadAuthHeaders;
+Admin.addAuthHeader = addAuthHeader;
+Admin.removeAuthHeader = removeAuthHeader;
+Admin.updateAuthHeadersJSON = updateAuthHeadersJSON;
+Admin.loadAuthHeaders = loadAuthHeaders;
 
 /**
  * Fetch tools from MCP server after OAuth completion for Authorization Code flow
  * @param {string} gatewayId - ID of the gateway to fetch tools for
  * @param {string} gatewayName - Name of the gateway for display purposes
  */
-async function fetchToolsForGateway(gatewayId, gatewayName) {
+Admin.fetchToolsForGateway = async function (gatewayId, gatewayName) {
     const button = document.getElementById(`fetch-tools-${gatewayId}`);
     if (!button) {
         return;
@@ -19748,7 +19433,7 @@ async function fetchToolsForGateway(gatewayId, gatewayName) {
 }
 
 // Expose fetch tools function to global scope
-window.fetchToolsForGateway = fetchToolsForGateway;
+Admin.fetchToolsForGateway = fetchToolsForGateway;
 
 console.log("🛡️ ContextForge AI Gateway admin.js initialized");
 
@@ -19756,7 +19441,7 @@ console.log("🛡️ ContextForge AI Gateway admin.js initialized");
 // BULK IMPORT TOOLS — MODAL WIRING
 // ===================================================================
 
-function setupBulkImportModal() {
+Admin.setupBulkImportModal = function () {
     const openBtn = safeGetElement("open-bulk-import", true);
     const modalId = "bulk-import-modal";
     const modal = safeGetElement(modalId, true);
@@ -19978,7 +19663,7 @@ function setupBulkImportModal() {
 /**
  * Initialize export/import functionality
  */
-function initializeExportImport() {
+Admin.initializeExportImport = function () {
     // Prevent double initialization
     if (window.exportImportInitialized) {
         console.log("🔄 Export/import already initialized, skipping");
@@ -20028,13 +19713,13 @@ function initializeExportImport() {
     loadRecentImports();
 
     // Mark as initialized
-    window.exportImportInitialized = true;
+    Admin.exportImportInitialized = true;
 }
 
 /**
  * Handle export all configuration
  */
-async function handleExportAll() {
+Admin.handleExportAll = async function () {
     console.log("📤 Starting export all configuration");
 
     try {
@@ -20093,7 +19778,7 @@ async function handleExportAll() {
 /**
  * Handle export selected configuration
  */
-async function handleExportSelected() {
+Admin.handleExportSelected = async function () {
     console.log("📋 Starting selective export");
 
     try {
@@ -20115,7 +19800,7 @@ async function handleExportSelected() {
 /**
  * Get export options from form
  */
-function getExportOptions() {
+Admin.getExportOptions = function () {
     const types = [];
 
     if (document.getElementById("export-tools")?.checked) {
@@ -20152,7 +19837,7 @@ function getExportOptions() {
 /**
  * Show/hide export progress
  */
-function showExportProgress(show) {
+Admin.showExportProgress = function (show) {
     const progressEl = document.getElementById("export-progress");
     if (progressEl) {
         progressEl.classList.toggle("hidden", !show);
@@ -20175,7 +19860,7 @@ function showExportProgress(show) {
 /**
  * Handle file selection for import
  */
-function handleFileSelect(event) {
+Admin.handleFileSelect = function (event) {
     const file = event.target.files[0];
     if (file) {
         processImportFile(file);
@@ -20185,7 +19870,7 @@ function handleFileSelect(event) {
 /**
  * Handle drag over for file drop
  */
-function handleDragOver(event) {
+Admin.handleDragOver = function (event) {
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
     event.currentTarget.classList.add(
@@ -20198,7 +19883,7 @@ function handleDragOver(event) {
 /**
  * Handle drag leave
  */
-function handleDragLeave(event) {
+Admin.handleDragLeave = function (event) {
     event.preventDefault();
     event.currentTarget.classList.remove(
         "border-blue-500",
@@ -20210,7 +19895,7 @@ function handleDragLeave(event) {
 /**
  * Handle file drop
  */
-function handleFileDrop(event) {
+Admin.handleFileDrop = function (event) {
     event.preventDefault();
     event.currentTarget.classList.remove(
         "border-blue-500",
@@ -20227,7 +19912,7 @@ function handleFileDrop(event) {
 /**
  * Process selected import file
  */
-function processImportFile(file) {
+Admin.processImportFile = function (file) {
     console.log("📁 Processing import file:", file.name);
 
     if (!file.type.includes("json")) {
@@ -20246,7 +19931,7 @@ function processImportFile(file) {
             }
 
             // Store import data and enable buttons
-            window.currentImportData = importData;
+            Admin.currentImportData = importData;
 
             const previewBtn = document.getElementById("import-preview-btn");
             const validateBtn = document.getElementById("import-validate-btn");
@@ -20278,7 +19963,7 @@ function processImportFile(file) {
 /**
  * Update drop zone to show loaded file
  */
-function updateDropZoneStatus(fileName, importData) {
+Admin.updateDropZoneStatus = function (fileName, importData) {
     const dropZone = document.getElementById("import-drop-zone");
     if (dropZone) {
         const entityCounts = importData.metadata?.entity_counts || {};
@@ -20309,8 +19994,8 @@ function updateDropZoneStatus(fileName, importData) {
 /**
  * Reset import file selection
  */
-function resetImportFile() {
-    window.currentImportData = null;
+Admin.resetImportFile = function () {
+    Admin.currentImportData = null;
 
     const dropZone = document.getElementById("import-drop-zone");
     if (dropZone) {
@@ -20352,7 +20037,7 @@ function resetImportFile() {
 /**
  * Preview import file for selective import
  */
-async function previewImport() {
+Admin.previewImport = async function () {
     console.log("🔍 Generating import preview...");
 
     if (!window.currentImportData) {
@@ -20397,7 +20082,7 @@ async function previewImport() {
 /**
  * Handle import (validate or execute)
  */
-async function handleImport(dryRun = false) {
+Admin.handleImport = async function (dryRun = false) {
     console.log(`🔄 Starting import (dry_run=${dryRun})`);
 
     if (!window.currentImportData) {
@@ -20458,7 +20143,7 @@ async function handleImport(dryRun = false) {
 /**
  * Display import results
  */
-function displayImportResults(result, isDryRun) {
+Admin.displayImportResults = function (result, isDryRun) {
     const statusSection = document.getElementById("import-status-section");
     if (statusSection) {
         statusSection.classList.remove("hidden");
@@ -20480,7 +20165,7 @@ function displayImportResults(result, isDryRun) {
 /**
  * Update import progress counts
  */
-function updateImportCounts(progress) {
+Admin.updateImportCounts = function (progress) {
     const total = progress.total || 0;
     const processed = progress.processed || 0;
     const created = progress.created || 0;
@@ -20506,7 +20191,7 @@ function updateImportCounts(progress) {
 /**
  * Display import messages (errors and warnings)
  */
-function displayImportMessages(errors, warnings, isDryRun) {
+Admin.displayImportMessages = function (errors, warnings, isDryRun) {
     const messagesContainer = document.getElementById("import-messages");
     if (!messagesContainer) {
         return;
@@ -20555,7 +20240,7 @@ function displayImportMessages(errors, warnings, isDryRun) {
 /**
  * Show/hide import progress
  */
-function showImportProgress(show) {
+Admin.showImportProgress = function (show) {
     // Disable/enable buttons during operation
     const previewBtn = document.getElementById("import-preview-btn");
     const validateBtn = document.getElementById("import-validate-btn");
@@ -20575,7 +20260,7 @@ function showImportProgress(show) {
 /**
  * Load recent import operations
  */
-async function loadRecentImports() {
+Admin.loadRecentImports = async function () {
     try {
         const response = await fetch(
             (window.ROOT_PATH || "") + "/admin/import/status",
@@ -20598,7 +20283,7 @@ async function loadRecentImports() {
 /**
  * Refresh current tab data after successful import
  */
-function refreshCurrentTabData() {
+Admin.refreshCurrentTabData = function () {
     // Find the currently active tab and refresh its data
     const activeTab = document.querySelector(".tab-link.border-indigo-500");
     if (activeTab) {
@@ -20626,7 +20311,7 @@ function refreshCurrentTabData() {
 /**
  * Show notification (simple implementation)
  */
-function showNotification(message, type = "info") {
+Admin.showNotification = function (message, type = "info") {
     console.log(`${type.toUpperCase()}: ${message}`);
 
     // Create a simple toast notification
@@ -20657,7 +20342,7 @@ function showNotification(message, type = "info") {
  * @param {string} message - The message to display (can be multi-line).
  * @param {string} type - The type of modal: 'success', 'error', or 'info'.
  */
-function showCopyableModal(title, message, type = "info") {
+Admin.showCopyableModal = function (title, message, type = "info") {
     // Remove any existing modal
     const existingModal = document.getElementById("copyable-modal-overlay");
     if (existingModal) {
@@ -20776,12 +20461,12 @@ function showCopyableModal(title, message, type = "info") {
     document.addEventListener("keydown", handleEscape);
 }
 
-window.showCopyableModal = showCopyableModal;
+Admin.showCopyableModal = showCopyableModal;
 
 /**
  * Utility function to get cookie value
  */
-function getCookie(name) {
+Admin.getCookie = function (name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) {
@@ -20791,7 +20476,7 @@ function getCookie(name) {
 }
 
 // Expose functions used in dynamically generated HTML
-window.resetImportFile = resetImportFile;
+Admin.resetImportFile = resetImportFile;
 
 // ===================================================================
 // A2A AGENT TEST MODAL FUNCTIONALITY
@@ -20806,7 +20491,7 @@ let a2aTestCloseHandler = null;
  * @param {string} agentName - Name of the agent for display
  * @param {string} endpointUrl - Endpoint URL of the agent
  */
-async function testA2AAgent(agentId, agentName, endpointUrl) {
+Admin.testA2AAgent = async function (agentId, agentName, endpointUrl) {
     try {
         console.log("Opening A2A test modal for:", agentName);
 
@@ -20867,7 +20552,7 @@ async function testA2AAgent(agentId, agentName, endpointUrl) {
  * Handle A2A test form submission
  * @param {Event} e - Form submit event
  */
-async function handleA2ATestSubmit(e) {
+Admin.handleA2ATestSubmit = async function (e) {
     e.preventDefault();
 
     const loading = safeGetElement("a2a-test-loading");
@@ -20967,7 +20652,7 @@ async function handleA2ATestSubmit(e) {
 /**
  * Handle A2A test modal close
  */
-function handleA2ATestClose() {
+Admin.handleA2ATestClose = function () {
     try {
         // Reset form
         const form = safeGetElement("a2a-test-form");
@@ -20995,7 +20680,7 @@ function handleA2ATestClose() {
 /**
  * Clean up A2A test modal event listeners
  */
-function cleanupA2ATestModal() {
+Admin.cleanupA2ATestModal = function () {
     try {
         const form = safeGetElement("a2a-test-form");
         const closeButton = safeGetElement("a2a-test-close");
@@ -21017,9 +20702,9 @@ function cleanupA2ATestModal() {
 }
 
 // Expose A2A test functions to global scope
-window.testA2AAgent = testA2AAgent;
-window.openA2ATestModal = testA2AAgent;
-window.cleanupA2ATestModal = cleanupA2ATestModal;
+Admin.testA2AAgent = testA2AAgent;
+Admin.openA2ATestModal = testA2AAgent;
+Admin.cleanupA2ATestModal = cleanupA2ATestModal;
 
 /**
  * Token Management Functions
@@ -21029,9 +20714,9 @@ window.cleanupA2ATestModal = cleanupA2ATestModal;
  * Load tokens list from API.
  * @param {boolean} resetToFirstPage - If true, forces page 1 (use after create/revoke).
  */
-async function loadTokensList(resetToFirstPage) {
-    const tokensTable = document.getElementById("tokens-table");
-    if (!tokensTable) {
+Admin.loadTokensList = async function () {
+    const tokensList = safeGetElement("tokens-list");
+    if (!tokensList) {
         return;
     }
 
@@ -21085,25 +20770,9 @@ async function loadTokensList(resetToFirstPage) {
  * Debounced server-side token search
  * @param {string} searchTerm - The search query
  */
-let tokenSearchDebounceTimer = null;
-function debouncedServerSideTokenSearch(searchTerm) {
-    if (tokenSearchDebounceTimer) {
-        clearTimeout(tokenSearchDebounceTimer);
-    }
-    tokenSearchDebounceTimer = setTimeout(() => {
-        performTokenSearch(searchTerm);
-    }, 300);
-}
-
-/**
- * Actually perform the token search after debounce
- * @param {string} searchTerm - The search query
- */
-async function performTokenSearch(searchTerm) {
-    const tokensTable = document.getElementById("tokens-table");
-
-    if (!tokensTable) {
-        console.error("tokens-table container not found");
+Admin.displayTokensList = function (tokens) {
+    const tokensList = safeGetElement("tokens-list");
+    if (!tokensList) {
         return;
     }
 
@@ -21145,7 +20814,8 @@ async function performTokenSearch(searchTerm) {
  * HTMX swaps of the tokens-table content.
  * @param {HTMLElement} [container] - Optional container; defaults to tokens-panel
  */
-function setupTokenListEventHandlers(container) {
+
+Admin.setupTokenListEventHandlers = function (container) {
     // Prefer the persistent parent panel so delegation survives HTMX swaps
     const panel = document.getElementById("tokens-panel") || container;
     if (!panel) {
@@ -21199,7 +20869,7 @@ function setupTokenListEventHandlers(container) {
 /**
  * Get the currently selected team ID from the team selector
  */
-function getCurrentTeamId() {
+Admin.getCurrentTeamId = function () {
     // First, try to get from Alpine.js component (most reliable)
     const teamSelector = document.querySelector('[x-data*="selectedTeam"]');
     if (
@@ -21233,7 +20903,7 @@ function getCurrentTeamId() {
  * Get the currently selected team name from Alpine.js team selector
  * @returns {string|null} Team name or null if not found
  */
-function getCurrentTeamName() {
+Admin.getCurrentTeamName = function () {
     const currentTeamId = getCurrentTeamId();
 
     if (!currentTeamId) {
@@ -21288,7 +20958,7 @@ function getCurrentTeamName() {
 /**
  * Update the team scoping warning/info visibility based on team selection
  */
-function updateTeamScopingWarning() {
+Admin.updateTeamScopingWarning = function () {
     const warningDiv = document.getElementById("team-scoping-warning");
     const infoDiv = document.getElementById("team-scoping-info");
     const teamNameSpan = document.getElementById("selected-team-name");
@@ -21319,7 +20989,7 @@ function updateTeamScopingWarning() {
 /**
  * Monitor team selection changes using Alpine.js watcher
  */
-function initializeTeamScopingMonitor() {
+Admin.initializeTeamScopingMonitor = function () {
     // Use Alpine.js $watch to monitor team selection changes
     document.addEventListener("alpine:init", () => {
         const teamSelector = document.querySelector('[x-data*="selectedTeam"]');
@@ -21330,7 +21000,7 @@ function initializeTeamScopingMonitor() {
             }, 500); // Check every 500ms
 
             // Store interval ID for cleanup if needed
-            window._teamMonitorInterval = checkInterval;
+            Admin._teamMonitorInterval = checkInterval;
         }
     });
 
@@ -21348,7 +21018,7 @@ function initializeTeamScopingMonitor() {
 /**
  * Set up create token form handling
  */
-function setupCreateTokenForm() {
+Admin.setupCreateTokenForm = function () {
     const form = safeGetElement("create-token-form");
     if (!form) {
         return;
@@ -21370,7 +21040,7 @@ function setupCreateTokenForm() {
  * @param {string} value - The IP/CIDR string to validate
  * @returns {boolean} True if valid IPv4/IPv6 address or CIDR notation
  */
-function isValidIpOrCidr(value) {
+Admin.isValidIpOrCidr = function (value) {
     if (!value || typeof value !== "string") {
         return false;
     }
@@ -21413,7 +21083,7 @@ function isValidIpOrCidr(value) {
  * @param {string} value - The permission string to validate
  * @returns {boolean} True if valid permission format
  */
-function isValidPermission(value) {
+Admin.isValidPermission = function (value) {
     if (!value || typeof value !== "string") {
         return false;
     }
@@ -21436,7 +21106,7 @@ function isValidPermission(value) {
  * Create a new API token
  */
 // Create a new API token
-async function createToken(form) {
+Admin.createToken = async function (form) {
     const formData = new FormData(form);
     const submitButton = form.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
@@ -21552,7 +21222,7 @@ async function createToken(form) {
 /**
  * Show modal with new token (one-time display)
  */
-function showTokenCreatedModal(tokenData) {
+Admin.showTokenCreatedModal = function (tokenData) {
     const modal = document.createElement("div");
     modal.className =
         "fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50";
@@ -21645,7 +21315,7 @@ function showTokenCreatedModal(tokenData) {
 /**
  * Copy text to clipboard
  */
-function copyToClipboard(elementId) {
+Admin.copyToClipboard = function (elementId) {
     const element = document.getElementById(elementId);
     if (element) {
         element.select();
@@ -21657,7 +21327,7 @@ function copyToClipboard(elementId) {
 /**
  * Revoke a token
  */
-async function revokeToken(tokenId, tokenName) {
+Admin.revokeToken = async function (tokenId, tokenName) {
     if (
         !confirm(
             `Are you sure you want to revoke the token "${tokenName}"? This action cannot be undone.`,
@@ -21700,7 +21370,7 @@ async function revokeToken(tokenId, tokenName) {
 /**
  * View token usage statistics
  */
-async function viewTokenUsage(tokenId) {
+Admin.viewTokenUsage = async function (tokenId) {
     try {
         const response = await fetchWithTimeout(
             `${window.ROOT_PATH}/tokens/${tokenId}/usage`,
@@ -21730,7 +21400,7 @@ async function viewTokenUsage(tokenId) {
 /**
  * Show usage statistics modal
  */
-function showUsageStatsModal(stats) {
+Admin.showUsageStatsModal = function (stats) {
     const modal = document.createElement("div");
     modal.className =
         "fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50";
@@ -21810,7 +21480,7 @@ function showUsageStatsModal(stats) {
  * @param {string} teamId - The team ID to look up
  * @returns {string} Team name or truncated ID if not found
  */
-function getTeamNameById(teamId) {
+Admin.getTeamNameById = function (teamId) {
     if (!teamId) {
         return null;
     }
@@ -21847,7 +21517,7 @@ function getTeamNameById(teamId) {
  * Show token details modal with full token information
  * @param {Object} token - The token object with all fields
  */
-function showTokenDetailsModal(token) {
+Admin.showTokenDetailsModal = function (token) {
     const formatDate = (dateStr) => {
         if (!dateStr) {
             return "Never";
@@ -22063,7 +21733,7 @@ function showTokenDetailsModal(token) {
 /**
  * Get auth token from storage or user input
  */
-async function getAuthToken() {
+Admin.getAuthToken = async function () {
     // Use the same authentication method as the rest of the admin interface
     let token = getCookie("jwt_token");
 
@@ -22087,7 +21757,7 @@ async function getAuthToken() {
  * Fetch helper that always includes auth context.
  * Ensures HTTP-only cookies are sent even when JS cannot read them.
  */
-async function fetchWithAuth(url, options = {}) {
+Admin.fetchWithAuth = async function (url, options = {}) {
     const opts = { ...options };
     // Always send same-origin cookies unless caller overrides explicitly
     opts.credentials = options.credentials || "same-origin";
@@ -22104,12 +21774,12 @@ async function fetchWithAuth(url, options = {}) {
 }
 
 // Expose token management functions to global scope
-window.loadTokensList = loadTokensList;
-window.setupCreateTokenForm = setupCreateTokenForm;
-window.createToken = createToken;
-window.revokeToken = revokeToken;
-window.viewTokenUsage = viewTokenUsage;
-window.copyToClipboard = copyToClipboard;
+Admin.loadTokensList = loadTokensList;
+Admin.setupCreateTokenForm = setupCreateTokenForm;
+Admin.createToken = createToken;
+Admin.revokeToken = revokeToken;
+Admin.viewTokenUsage = viewTokenUsage;
+Admin.copyToClipboard = copyToClipboard;
 
 // ===================================================================
 // USER MANAGEMENT FUNCTIONS
@@ -22118,7 +21788,7 @@ window.copyToClipboard = copyToClipboard;
 /**
  * Show user edit modal and load edit form
  */
-async function showUserEditModal(userEmail) {
+Admin.showUserEditModal = function (userEmail) {
     const modal = document.getElementById("user-edit-modal");
     const modalContent = document.getElementById("user-edit-modal-content");
     if (!modal || !modalContent || !userEmail) {
@@ -22169,7 +21839,7 @@ async function showUserEditModal(userEmail) {
 /**
  * Hide user edit modal
  */
-function hideUserEditModal() {
+Admin.hideUserEditModal = function () {
     const modal = document.getElementById("user-edit-modal");
     if (modal) {
         modal.style.display = "none";
@@ -22201,11 +21871,11 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Expose user modal functions to global scope
-window.showUserEditModal = showUserEditModal;
-window.hideUserEditModal = hideUserEditModal;
+Admin.showUserEditModal = showUserEditModal;
+Admin.hideUserEditModal = hideUserEditModal;
 
 // Team edit modal functions
-async function showTeamEditModal(teamId) {
+Admin.showTeamEditModal = async function (teamId) {
     // Get the root path by extracting it from the current pathname
     let rootPath = window.location.pathname;
     const adminIndex = rootPath.lastIndexOf("/admin");
@@ -22237,23 +21907,23 @@ async function showTeamEditModal(teamId) {
         });
 }
 
-function hideTeamEditModal() {
+Admin.hideTeamEditModal = function () {
     document.getElementById("team-edit-modal").classList.add("hidden");
 }
 
 // Expose team modal functions to global scope
-window.showTeamEditModal = showTeamEditModal;
-window.hideTeamEditModal = hideTeamEditModal;
+Admin.showTeamEditModal = showTeamEditModal;
+Admin.hideTeamEditModal = hideTeamEditModal;
 
 // Team member management functions
-function showAddMemberForm(teamId) {
+Admin.showAddMemberForm = function (teamId) {
     const form = document.getElementById("add-member-form-" + teamId);
     if (form) {
         form.classList.remove("hidden");
     }
 }
 
-function hideAddMemberForm(teamId) {
+Admin.hideAddMemberForm = function (teamId) {
     const form = document.getElementById("add-member-form-" + teamId);
     if (form) {
         form.classList.add("hidden");
@@ -22266,11 +21936,11 @@ function hideAddMemberForm(teamId) {
 }
 
 // Expose team member management functions to global scope
-window.showAddMemberForm = showAddMemberForm;
-window.hideAddMemberForm = hideAddMemberForm;
+Admin.showAddMemberForm = showAddMemberForm;
+Admin.hideAddMemberForm = hideAddMemberForm;
 
 // Reset team creation form after successful HTMX actions
-function resetTeamCreateForm() {
+Admin.resetTeamCreateForm = function () {
     const form = document.querySelector('form[hx-post*="/admin/teams"]');
     if (form) {
         form.reset();
@@ -22282,14 +21952,14 @@ function resetTeamCreateForm() {
 }
 
 // Normalize team ID from element IDs like "add-members-form-<id>"
-function extractTeamId(prefix, elementId) {
+Admin.extractTeamId = function (prefix, elementId) {
     if (!elementId || !elementId.startsWith(prefix)) {
         return null;
     }
     return elementId.slice(prefix.length);
 }
 
-function updateAddMembersCount(teamId) {
+Admin.updateAddMembersCount = function (teamId) {
     const form = document.getElementById(`add-members-form-${teamId}`);
     const countEl = document.getElementById(`selected-count-${teamId}`);
     if (!form || !countEl) {
@@ -22304,7 +21974,7 @@ function updateAddMembersCount(teamId) {
             : `${checked.length} user${checked.length !== 1 ? "s" : ""} selected`;
 }
 
-function dedupeSelectorItems(container) {
+Admin.dedupeSelectorItems = function (container) {
     if (!container) {
         return;
     }
@@ -22324,7 +21994,7 @@ function dedupeSelectorItems(container) {
 }
 
 // Perform server-side user search and build HTML from JSON (like tools search)
-async function performUserSearch(teamId, query, container, teamMemberData) {
+Admin.performUserSearch = async function (teamId, query, container, teamMemberData) {
     console.log(`[Team ${teamId}] Performing user search: "${query}"`);
 
     // Step 1: Capture current selections before replacing HTML
@@ -22491,7 +22161,7 @@ async function performUserSearch(teamId, query, container, teamMemberData) {
 }
 
 // Restore user selections after loading default list
-function restoreUserSelections(container, selections, roleSelections) {
+Admin.restoreUserSelections = function (container, selections, roleSelections) {
     try {
         const checkboxes = container.querySelectorAll(
             'input[name="associatedUsers"]',
@@ -22518,7 +22188,7 @@ function restoreUserSelections(container, selections, roleSelections) {
 }
 
 // Helper to format date (similar to Python strftime "%b %d, %Y")
-function formatDate(dateString) {
+Admin.formatDate = function (dateString) {
     try {
         const date = new Date(dateString);
         return date.toLocaleDateString("en-US", {
@@ -22531,7 +22201,7 @@ function formatDate(dateString) {
     }
 }
 
-function initializeAddMembersForm(form) {
+Admin.initializeAddMembersForm = function (form) {
     if (!form || form.dataset.initialized === "true") {
         return;
     }
@@ -22814,7 +22484,7 @@ function initializeAddMembersForm(form) {
     });
 }
 
-function initializeAddMembersForms(root = document) {
+Admin.initializeAddMembersForms = function (root = document) {
     // Support both old add-members-form pattern and new unified team-members-form pattern
     const addMembersForms =
         root?.querySelectorAll?.('[id^="add-members-form-"]') || [];
@@ -22833,7 +22503,16 @@ function getTeamsCurrentPaginationState() {
     };
 }
 
-function handleAdminTeamAction(event) {
+// Get current pagination state from URL parameters
+function getTeamsCurrentPaginationState() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+        page: Math.max(1, parseInt(urlParams.get("teams_page"), 10) || 1),
+        perPage: Math.max(1, parseInt(urlParams.get("teams_size"), 10) || 10),
+    };
+}
+
+Admin.handleAdminTeamAction = function (event) {
     const detail = event.detail || {};
     const delayMs = Number(detail.delayMs) || 0;
     setTimeout(() => {
@@ -22921,7 +22600,7 @@ function handleAdminTeamAction(event) {
     }, delayMs);
 }
 
-function handleAdminUserAction(event) {
+Admin.handleAdminUserAction = function (event) {
     const detail = event.detail || {};
     const delayMs = Number(detail.delayMs) || 0;
     setTimeout(() => {
@@ -22940,7 +22619,7 @@ function handleAdminUserAction(event) {
     }, delayMs);
 }
 
-function registerAdminActionListeners() {
+Admin.registerAdminActionListeners = function () {
     if (!document.body) {
         return;
     }
@@ -22985,7 +22664,7 @@ if (document.readyState === "loading") {
 }
 
 // Logs refresh function
-function refreshLogs() {
+Admin.refreshLogs = function () {
     const logsSection = document.getElementById("logs");
     if (logsSection && typeof window.htmx !== "undefined") {
         // Trigger HTMX refresh on the logs section
@@ -22994,7 +22673,7 @@ function refreshLogs() {
 }
 
 // Expose logs functions to global scope
-window.refreshLogs = refreshLogs;
+Admin.refreshLogs = refreshLogs;
 
 // User edit modal functions (already defined above)
 // Functions are already exposed to global scope
@@ -23002,7 +22681,7 @@ window.refreshLogs = refreshLogs;
 // Team permissions functions are implemented in the admin.html template
 // Remove placeholder functions to avoid overriding template functionality
 
-function initializePermissionsPanel() {
+Admin.initializePermissionsPanel = function () {
     // Load team data if available
     if (window.USER_TEAMS && window.USER_TEAMS.length > 0) {
         const membersList = document.getElementById("team-members-list");
@@ -23021,7 +22700,7 @@ function initializePermissionsPanel() {
 }
 
 // Permission functions are implemented in admin.html template - don't override them
-window.initializePermissionsPanel = initializePermissionsPanel;
+Admin.initializePermissionsPanel = initializePermissionsPanel;
 
 // ===================================================================
 // TEAM DISCOVERY AND SELF-SERVICE FUNCTIONS
@@ -23030,7 +22709,7 @@ window.initializePermissionsPanel = initializePermissionsPanel;
 /**
  * Load and display public teams that the user can join
  */
-async function loadPublicTeams() {
+Admin.loadPublicTeams = async function () {
     const container = safeGetElement("public-teams-list");
     if (!container) {
         console.error("Public teams list container not found");
@@ -23085,7 +22764,7 @@ async function loadPublicTeams() {
  * Display public teams in the UI
  * @param {Array} teams - Array of team objects
  */
-function displayPublicTeams(teams) {
+Admin.displayPublicTeams = function (teams) {
     const container = safeGetElement("public-teams-list");
     if (!container) {
         return;
@@ -23158,7 +22837,7 @@ function displayPublicTeams(teams) {
  * Request to join a public team
  * @param {string} teamId - ID of the team to join
  */
-async function requestToJoinTeam(teamId) {
+Admin.requestToJoinTeam = async function (teamId) {
     if (!teamId) {
         console.error("Team ID is required");
         return;
@@ -23210,7 +22889,7 @@ async function requestToJoinTeam(teamId) {
  * @param {string} teamId - ID of the team to leave
  * @param {string} teamName - Name of the team (for confirmation)
  */
-async function leaveTeam(teamId, teamName) {
+Admin.leaveTeam = async function (teamId, teamName) {
     if (!teamId) {
         console.error("Team ID is required");
         return;
@@ -23272,7 +22951,7 @@ async function leaveTeam(teamId, teamName) {
  * @param {string} teamId - ID of the team
  * @param {string} requestId - ID of the join request
  */
-async function approveJoinRequest(teamId, requestId) {
+Admin.approveJoinRequest = async function (teamId, requestId) {
     if (!teamId || !requestId) {
         console.error("Team ID and request ID are required");
         return;
@@ -23321,7 +23000,7 @@ async function approveJoinRequest(teamId, requestId) {
  * @param {string} teamId - ID of the team
  * @param {string} requestId - ID of the join request
  */
-async function rejectJoinRequest(teamId, requestId) {
+Admin.rejectJoinRequest = async function (teamId, requestId) {
     if (!teamId || !requestId) {
         console.error("Team ID and request ID are required");
         return;
@@ -23369,16 +23048,16 @@ async function rejectJoinRequest(teamId, requestId) {
 }
 
 // Expose team functions to global scope
-window.loadPublicTeams = loadPublicTeams;
-window.requestToJoinTeam = requestToJoinTeam;
-window.leaveTeam = leaveTeam;
-window.approveJoinRequest = approveJoinRequest;
-window.rejectJoinRequest = rejectJoinRequest;
+Admin.loadPublicTeams = loadPublicTeams;
+Admin.requestToJoinTeam = requestToJoinTeam;
+Admin.leaveTeam = leaveTeam;
+Admin.approveJoinRequest = approveJoinRequest;
+Admin.rejectJoinRequest = rejectJoinRequest;
 
 /**
  * Validate password match in user edit form
  */
-function getPasswordPolicy() {
+Admin.getPasswordPolicy = function () {
     const policyEl = document.getElementById("edit-password-policy-data");
     if (!policyEl) {
         return null;
@@ -23392,7 +23071,7 @@ function getPasswordPolicy() {
     };
 }
 
-function updateRequirementIcon(elementId, isValid) {
+Admin.updateRequirementIcon = function (elementId, isValid) {
     const req = document.getElementById(elementId);
     if (!req) {
         return;
@@ -23412,7 +23091,7 @@ function updateRequirementIcon(elementId, isValid) {
     }
 }
 
-function validatePasswordRequirements() {
+Admin.validatePasswordRequirements = function () {
     const policy = getPasswordPolicy();
     const passwordField = document.getElementById("password-field");
     if (!policy || !passwordField) {
@@ -23462,7 +23141,7 @@ function validatePasswordRequirements() {
     }
 }
 
-function initializePasswordValidation(root = document) {
+Admin.initializePasswordValidation = function (root = document) {
     if (
         root?.querySelector?.("#password-field") ||
         document.getElementById("password-field")
@@ -23472,7 +23151,7 @@ function initializePasswordValidation(root = document) {
     }
 }
 
-function validatePasswordMatch() {
+Admin.validatePasswordMatch = function () {
     const passwordField = document.getElementById("password-field");
     const confirmPasswordField = document.getElementById(
         "confirm-password-field",
@@ -23511,8 +23190,8 @@ function validatePasswordMatch() {
 }
 
 // Expose password validation function to global scope
-window.validatePasswordMatch = validatePasswordMatch;
-window.validatePasswordRequirements = validatePasswordRequirements;
+Admin.validatePasswordMatch = validatePasswordMatch;
+Admin.validatePasswordRequirements = validatePasswordRequirements;
 
 // ===================================================================
 // SELECTIVE IMPORT FUNCTIONS
@@ -23521,7 +23200,7 @@ window.validatePasswordRequirements = validatePasswordRequirements;
 /**
  * Display import preview with selective import options
  */
-function displayImportPreview(preview) {
+Admin.displayImportPreview = function (preview) {
     console.log("📋 Displaying import preview:", preview);
 
     // Find or create preview container
@@ -23725,14 +23404,14 @@ function displayImportPreview(preview) {
     `;
 
     // Store preview data and show preview section
-    window.currentImportPreview = preview;
+    Admin.currentImportPreview = preview;
     updateSelectionCount();
 }
 
 /**
  * Handle selective import based on user selections
  */
-async function handleSelectiveImport(dryRun = false) {
+Admin.handleSelectiveImport = async function (dryRun = false) {
     console.log(`🎯 Starting selective import (dry_run=${dryRun})`);
 
     if (!window.currentImportData) {
@@ -23813,7 +23492,7 @@ async function handleSelectiveImport(dryRun = false) {
 /**
  * Collect user selections for selective import
  */
-function collectUserSelections() {
+Admin.collectUserSelections = function () {
     const selections = {};
 
     // Collect gateway selections
@@ -23843,7 +23522,7 @@ function collectUserSelections() {
 /**
  * Update selection count display
  */
-function updateSelectionCount() {
+Admin.updateSelectionCount = function () {
     const gatewayCount = document.querySelectorAll(
         ".gateway-checkbox:checked",
     ).length;
@@ -23861,7 +23540,7 @@ function updateSelectionCount() {
 /**
  * Select all items
  */
-function selectAllItems() {
+Admin.selectAllItems = function () {
     document
         .querySelectorAll(".gateway-checkbox, .item-checkbox")
         .forEach((checkbox) => {
@@ -23873,7 +23552,7 @@ function selectAllItems() {
 /**
  * Select no items
  */
-function selectNoneItems() {
+Admin.selectNoneItems = function () {
     document
         .querySelectorAll(".gateway-checkbox, .item-checkbox")
         .forEach((checkbox) => {
@@ -23885,7 +23564,7 @@ function selectNoneItems() {
 /**
  * Select only custom items (not gateway items)
  */
-function selectOnlyCustom() {
+Admin.selectOnlyCustom = function () {
     document.querySelectorAll(".gateway-checkbox").forEach((checkbox) => {
         checkbox.checked = false;
     });
@@ -23898,14 +23577,14 @@ function selectOnlyCustom() {
 /**
  * Reset import selection
  */
-function resetImportSelection() {
+Admin.resetImportSelection = function () {
     const previewContainer = document.getElementById(
         "import-preview-container",
     );
     if (previewContainer) {
         previewContainer.remove();
     }
-    window.currentImportPreview = null;
+    Admin.currentImportPreview = null;
 }
 
 /* ---------------------------------------------------------------------------
@@ -23936,7 +23615,7 @@ function resetImportSelection() {
 
     // Save initial markup on first full load so we can restore exactly if needed
     document.addEventListener("DOMContentLoaded", () => {
-        window.__initialSectionMarkup = window.__initialSectionMarkup || {};
+        Admin.__initialSectionMarkup = window.__initialSectionMarkup || {};
         SECTION_NAMES.forEach((s) => {
             if (isSectionHidden(s)) {
                 return;
@@ -23944,13 +23623,13 @@ function resetImportSelection() {
             const el = document.getElementById(`${s}-section`);
             if (el && !(s in window.__initialSectionMarkup)) {
                 // store the exact innerHTML produced by the server initially
-                window.__initialSectionMarkup[s] = el.innerHTML;
+                Admin.__initialSectionMarkup[s] = el.innerHTML;
             }
         });
     });
 
     // Helper: try to re-run common initializers after a section's DOM is replaced
-    function reinitializeSection(sectionEl, sectionName) {
+Admin.reinitializeSection = function (sectionEl, sectionName) {
         try {
             if (!sectionEl) {
                 return;
@@ -24113,7 +23792,7 @@ function resetImportSelection() {
         }
     }
 
-    function updateSectionHeaders(teamId) {
+Admin.updateSectionHeaders = function (teamId) {
         const sections = [
             "tools",
             "resources",
@@ -24148,7 +23827,7 @@ function resetImportSelection() {
         });
     }
 
-    function getTeamNameById(teamId) {
+Admin.getTeamNameById = function (teamId) {
         // Get team name from Alpine.js data or fallback
         const teamSelector = document.querySelector('[x-data*="selectedTeam"]');
         if (
@@ -24165,7 +23844,7 @@ function resetImportSelection() {
     }
 
     // The exported function: reloadAllResourceSections
-    async function reloadAllResourceSections(teamId) {
+Admin.reloadAllResourceSections = async function (teamId) {
         const sections = [
             "tools",
             "resources",
@@ -24254,24 +23933,24 @@ function resetImportSelection() {
     }
 
     // Export to global to keep old callers working
-    window.reloadAllResourceSections = reloadAllResourceSections;
+    Admin.reloadAllResourceSections = reloadAllResourceSections;
 })();
 
 // Expose selective import functions to global scope
-window.previewImport = previewImport;
-window.handleSelectiveImport = handleSelectiveImport;
-window.displayImportPreview = displayImportPreview;
-window.collectUserSelections = collectUserSelections;
-window.updateSelectionCount = updateSelectionCount;
-window.selectAllItems = selectAllItems;
-window.selectNoneItems = selectNoneItems;
-window.selectOnlyCustom = selectOnlyCustom;
-window.resetImportSelection = resetImportSelection;
+Admin.previewImport = previewImport;
+Admin.handleSelectiveImport = handleSelectiveImport;
+Admin.displayImportPreview = displayImportPreview;
+Admin.collectUserSelections = collectUserSelections;
+Admin.updateSelectionCount = updateSelectionCount;
+Admin.selectAllItems = selectAllItems;
+Admin.selectNoneItems = selectNoneItems;
+Admin.selectOnlyCustom = selectOnlyCustom;
+Admin.resetImportSelection = resetImportSelection;
 
 // Plugin management functions
-function initializePluginFunctions() {
+Admin.initializePluginFunctions = function () {
     // Populate hook, tag, and author filters on page load
-    window.populatePluginFilters = function () {
+    Admin.populatePluginFilters = function () {
         const cards = document.querySelectorAll(".plugin-card");
         const hookSet = new Set();
         const tagSet = new Set();
@@ -24338,7 +24017,7 @@ function initializePluginFunctions() {
     };
 
     // Filter plugins based on search and filters
-    window.filterPlugins = function () {
+    Admin.filterPlugins = function () {
         const searchInput = document.getElementById("plugin-search");
         const modeFilter = document.getElementById("plugin-mode-filter");
         const statusFilter = document.getElementById("plugin-status-filter");
@@ -24426,7 +24105,7 @@ function initializePluginFunctions() {
     };
 
     // Filter by hook when clicking on hook point
-    window.filterByHook = function (hook) {
+    Admin.filterByHook = function (hook) {
         const hookFilter = document.getElementById("plugin-hook-filter");
         if (hookFilter) {
             hookFilter.value = hook;
@@ -24439,7 +24118,7 @@ function initializePluginFunctions() {
     };
 
     // Filter by tag when clicking on tag
-    window.filterByTag = function (tag) {
+    Admin.filterByTag = function (tag) {
         const tagFilter = document.getElementById("plugin-tag-filter");
         if (tagFilter) {
             tagFilter.value = tag;
@@ -24452,7 +24131,7 @@ function initializePluginFunctions() {
     };
 
     // Filter by author when clicking on author
-    window.filterByAuthor = function (author) {
+    Admin.filterByAuthor = function (author) {
         const authorFilter = document.getElementById("plugin-author-filter");
         if (authorFilter) {
             // Convert to lowercase to match data-author attribute
@@ -24469,7 +24148,7 @@ function initializePluginFunctions() {
     };
 
     // Helper function to update badge highlighting
-    function updateBadgeHighlighting(type, value) {
+Admin.updateBadgeHighlighting = function (type, value) {
         // Define selectors for each type
         const selectors = {
             hook: "[onclick^='filterByHook']",
@@ -24549,7 +24228,7 @@ function initializePluginFunctions() {
     }
 
     // Show plugin details modal
-    window.showPluginDetails = async function (pluginName) {
+    Admin.showPluginDetails = async function (pluginName) {
         const modal = document.getElementById("plugin-details-modal");
         const modalName = document.getElementById("modal-plugin-name");
         const modalContent = document.getElementById("modal-plugin-content");
@@ -24674,7 +24353,7 @@ function initializePluginFunctions() {
     };
 
     // Close plugin details modal
-    window.closePluginDetails = function () {
+    Admin.closePluginDetails = function () {
         const modal = document.getElementById("plugin-details-modal");
         if (modal) {
             modal.classList.add("hidden");
@@ -24692,14 +24371,14 @@ if (isAdminUser() && document.getElementById("plugins-panel")) {
 }
 
 // Expose plugin functions to global scope
-window.initializePluginFunctions = initializePluginFunctions;
+Admin.initializePluginFunctions = initializePluginFunctions;
 
 // ===================================================================
 // MCP REGISTRY MODAL FUNCTIONS
 // ===================================================================
 
 // Define modal functions in global scope for MCP Registry
-window.showApiKeyModal = function (serverId, serverName, serverUrl) {
+Admin.showApiKeyModal = function (serverId, serverName, serverUrl) {
     const modal = document.getElementById("api-key-modal");
     if (modal) {
         document.getElementById("modal-server-id").value = serverId;
@@ -24709,7 +24388,7 @@ window.showApiKeyModal = function (serverId, serverName, serverUrl) {
     }
 };
 
-window.closeApiKeyModal = function () {
+Admin.closeApiKeyModal = function () {
     const modal = document.getElementById("api-key-modal");
     if (modal) {
         modal.classList.add("hidden");
@@ -24720,7 +24399,7 @@ window.closeApiKeyModal = function () {
     }
 };
 
-window.submitApiKeyForm = function (event) {
+Admin.submitApiKeyForm = function (event) {
     event.preventDefault();
     const serverId = document.getElementById("modal-server-id").value;
     const customName = document.getElementById("modal-custom-name").value;
@@ -24775,7 +24454,7 @@ window.submitApiKeyForm = function (event) {
 /**
  * Toggle visibility of TLS certificate/key fields based on TLS checkbox
  */
-window.toggleGrpcTlsFields = function () {
+Admin.toggleGrpcTlsFields = function () {
     const tlsEnabled =
         document.getElementById("grpc-tls-enabled")?.checked || false;
     const certField = document.getElementById("grpc-tls-cert-field");
@@ -24794,7 +24473,7 @@ window.toggleGrpcTlsFields = function () {
  * View gRPC service methods in a modal or alert
  * @param {string} serviceId - The gRPC service ID
  */
-window.viewGrpcMethods = function (serviceId) {
+Admin.viewGrpcMethods = function (serviceId) {
     const rootPath = window.ROOT_PATH || "";
 
     fetch(`${rootPath}/admin/grpc/${serviceId}/methods`, {
@@ -24831,7 +24510,7 @@ window.viewGrpcMethods = function (serviceId) {
 
 // Helper function to get cookie if not already defined
 if (typeof window.getCookie === "undefined") {
-    window.getCookie = function (name) {
+    Admin.getCookie = function (name) {
         const value = "; " + document.cookie;
         const parts = value.split("; " + name + "=");
         if (parts.length === 2) {
@@ -24859,7 +24538,7 @@ const llmChatState = {
 /**
  * Initialize LLM Chat when tab is shown
  */
-function initializeLLMChat() {
+Admin.initializeLLMChat = function () {
     console.log("Initializing LLM Chat...");
 
     // Generate or retrieve user ID
@@ -24903,7 +24582,7 @@ function initializeLLMChat() {
 /**
  * Initialize scroll listener for auto-scroll management
  */
-function initializeChatScroll() {
+Admin.initializeChatScroll = function () {
     const container = document.getElementById("chat-messages-container");
     if (container) {
         container.addEventListener("scroll", () => {
@@ -24921,7 +24600,7 @@ function initializeChatScroll() {
 /**
  * Generate a unique user ID for the session
  */
-function getAuthenticatedUserId() {
+Admin.getAuthenticatedUserId = function () {
     const currentUser = window.CURRENT_USER;
     if (!currentUser) {
         return "";
@@ -24941,7 +24620,7 @@ function getAuthenticatedUserId() {
     return "";
 }
 
-function generateUserId() {
+Admin.generateUserId = function () {
     const authenticatedUserId = getAuthenticatedUserId();
     if (authenticatedUserId) {
         try {
@@ -24973,7 +24652,7 @@ function generateUserId() {
 /**
  * Load virtual servers for chat
  */
-async function loadVirtualServersForChat() {
+Admin.loadVirtualServersForChat = async function () {
     const serversList = document.getElementById("llm-chat-servers-list");
     if (!serversList) {
         return;
@@ -25193,7 +24872,7 @@ async function selectServerForChat(
 /**
  * Load available LLM models from the gateway's LLM Settings
  */
-async function loadLLMModels() {
+Admin.loadLLMModels = async function () {
     const modelSelect = document.getElementById("llm-model-select");
     if (!modelSelect) {
         return;
@@ -25240,7 +24919,7 @@ async function loadLLMModels() {
  * Handle LLM model selection change
  */
 // eslint-disable-next-line no-unused-vars
-function handleLLMModelChange() {
+Admin.handleLLMModelChange = function () {
     const modelSelect = document.getElementById("llm-model-select");
     const modelBadge = document.getElementById("llm-model-badge");
     const modelNameSpan = document.getElementById("llmchat-model-name");
@@ -25266,7 +24945,7 @@ function handleLLMModelChange() {
 /**
  * Update connect button state
  */
-function updateConnectButtonState() {
+Admin.updateConnectButtonState = function () {
     const connectBtn = document.getElementById("llm-connect-btn");
     const modelSelect = document.getElementById("llm-model-select");
     const selectedModel = modelSelect ? modelSelect.value : "";
@@ -25281,7 +24960,7 @@ function updateConnectButtonState() {
  * Connect to LLM chat
  */
 // eslint-disable-next-line no-unused-vars
-async function connectLLMChat() {
+Admin.connectLLMChat = async function () {
     if (!llmChatState.selectedServerId) {
         showErrorMessage("Please select a virtual server first");
         return;
@@ -25469,7 +25148,7 @@ async function connectLLMChat() {
  * Build LLM config object from form inputs
  * Models are configured via Admin UI -> Settings -> LLM Settings
  */
-function buildLLMConfig(modelId) {
+Admin.buildLLMConfig = function (modelId) {
     const config = {
         model: modelId,
     };
@@ -25494,7 +25173,7 @@ function buildLLMConfig(modelId) {
  * @deprecated Use buildLLMConfig(modelId) instead
  */
 // eslint-disable-next-line no-unused-vars
-function buildLLMConfigLegacy(provider) {
+Admin.buildLLMConfigLegacy = function (provider) {
     const config = {
         provider,
         config: {},
@@ -25684,7 +25363,7 @@ function buildLLMConfigLegacy(provider) {
  * Copy environment variables to clipboard for the specified provider
  */
 // eslint-disable-next-line no-unused-vars
-async function copyEnvVariables(provider) {
+Admin.copyEnvVariables = async function (provider) {
     const envVariables = {
         azure: `AZURE_OPENAI_API_KEY=<api_key>
 AZURE_OPENAI_ENDPOINT=https://test-url.openai.azure.com
@@ -25762,7 +25441,7 @@ OLLAMA_BASE_URL=http://localhost:11434`,
 /**
  * Show success notification when environment variables are copied
  */
-function showCopySuccessNotification(provider) {
+Admin.showCopySuccessNotification = function (provider) {
     const providerNames = {
         azure: "Azure OpenAI",
         ollama: "Ollama",
@@ -25800,7 +25479,7 @@ function showCopySuccessNotification(provider) {
 /**
  * Show connection success
  */
-function showConnectionSuccess() {
+Admin.showConnectionSuccess = function () {
     // Update connection status badge
     const statusBadge = document.getElementById("llm-connection-status");
     if (statusBadge) {
@@ -25884,7 +25563,7 @@ function showConnectionSuccess() {
 /**
  * Display connection error with proper formatting
  */
-function showConnectionError(message) {
+Admin.showConnectionError = function (message) {
     const statusDiv = document.getElementById("llm-config-status");
     if (statusDiv) {
         statusDiv.className =
@@ -25908,7 +25587,7 @@ function showConnectionError(message) {
  * Disconnect from LLM chat
  */
 // eslint-disable-next-line no-unused-vars
-async function disconnectLLMChat() {
+Admin.disconnectLLMChat = async function () {
     if (!llmChatState.isConnected) {
         console.warn("No active connection to disconnect");
         return;
@@ -26079,7 +25758,7 @@ async function disconnectLLMChat() {
 /**
  * Send chat message
  */
-async function sendChatMessage(event) {
+Admin.sendChatMessage = async function (event) {
     event.preventDefault();
 
     const input = document.getElementById("chat-input");
@@ -26354,7 +26033,7 @@ async function sendChatMessage(event) {
  * Parse content with <think> tags and separate thinking from final answer
  * Returns: { thinkingSteps: [{content: string}], finalAnswer: string, rawContent: string }
  */
-function parseThinkTags(content) {
+Admin.parseThinkTags = function (content) {
     const thinkingSteps = [];
     let finalAnswer = "";
     const rawContent = content;
@@ -26382,7 +26061,7 @@ function parseThinkTags(content) {
  * Update chat message with think tags support
  * Renders thinking steps in collapsible UI and final answer separately
  */
-function updateChatMessageWithThinkTags(messageId, content) {
+Admin.updateChatMessageWithThinkTags = function (messageId, content) {
     const messageDiv = document.getElementById(messageId);
     if (!messageDiv) {
         return;
@@ -26428,7 +26107,7 @@ function updateChatMessageWithThinkTags(messageId, content) {
 /**
  * Create the thinking UI component with collapsible steps
  */
-function createThinkingUI(thinkingSteps) {
+Admin.createThinkingUI = function (thinkingSteps) {
     const container = document.createElement("div");
     container.className = "thinking-container";
 
@@ -26496,7 +26175,7 @@ function createThinkingUI(thinkingSteps) {
 /**
  * Helper to escape HTML for safe rendering
  */
-function escapeHtmlChat(text) {
+Admin.escapeHtmlChat = function (text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
@@ -26548,7 +26227,7 @@ function escapeHtmlChat(text) {
 //     return messageId;
 // }
 
-function appendChatMessage(role, content, isStreaming = false) {
+Admin.appendChatMessage = function (role, content, isStreaming = false) {
     const container = document.getElementById("chat-messages-container");
     const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -26597,7 +26276,7 @@ function appendChatMessage(role, content, isStreaming = false) {
 /**
  * Render and sanitize markdown content
  */
-function renderMarkdown(text) {
+Admin.renderMarkdown = function (text) {
     if (typeof marked === "undefined" || typeof DOMPurify === "undefined") {
         return text;
     }
@@ -26620,7 +26299,7 @@ function renderMarkdown(text) {
  */
 let scrollThrottle = null;
 let renderThrottle = null;
-function updateChatMessage(messageId, content) {
+Admin.updateChatMessage = function (messageId, content) {
     const messageDiv = document.getElementById(messageId);
     if (messageDiv) {
         const contentEl = messageDiv.querySelector(".message-content");
@@ -26656,7 +26335,7 @@ function updateChatMessage(messageId, content) {
 /**
  * Mark message as complete (remove streaming indicator)
  */
-function markMessageComplete(messageId) {
+Admin.markMessageComplete = function (messageId) {
     const messageDiv = document.getElementById(messageId);
     if (messageDiv) {
         const indicator = messageDiv.querySelector(".streaming-indicator");
@@ -26700,7 +26379,7 @@ function markMessageComplete(messageId) {
  * Get or create a tool-events card positioned above the assistant message.
  * The card is a sibling of the message div, not nested inside.
  */
-function getOrCreateToolCard(messageId) {
+Admin.getOrCreateToolCard = function (messageId) {
     const messageDiv = document.getElementById(messageId);
     if (!messageDiv) {
         return null;
@@ -26763,7 +26442,7 @@ function getOrCreateToolCard(messageId) {
 /**
  * Add a tool event row to the tool card.
  */
-function addToolEventToCard(messageId, eventType, payload) {
+Admin.addToolEventToCard = function (messageId, eventType, payload) {
     const card = getOrCreateToolCard(messageId);
     if (!card) {
         return;
@@ -26813,7 +26492,7 @@ function addToolEventToCard(messageId, eventType, payload) {
 /**
  * Update or create a "tools used" summary badge on the tool card when final event arrives.
  */
-function setToolUsedSummary(messageId, used, toolsList) {
+Admin.setToolUsedSummary = function (messageId, used, toolsList) {
     const card = getOrCreateToolCard(messageId);
     if (!card) {
         return;
@@ -26841,7 +26520,7 @@ function setToolUsedSummary(messageId, used, toolsList) {
 /**
  * Clear all chat messages
  */
-function clearChatMessages() {
+Admin.clearChatMessages = function () {
     const container = document.getElementById("chat-messages-container");
     if (container) {
         container.innerHTML = `
@@ -26861,7 +26540,7 @@ function clearChatMessages() {
 /**
  * Scroll chat to bottom
  */
-function scrollChatToBottom(force = false) {
+Admin.scrollChatToBottom = function (force = false) {
     const container = document.getElementById("chat-messages-container");
     if (container) {
         if (force || llmChatState.autoScroll) {
@@ -26877,14 +26556,14 @@ function scrollChatToBottom(force = false) {
  * Handle Enter key in chat input (send on Enter, new line on Shift+Enter)
  */
 // eslint-disable-next-line no-unused-vars
-function handleChatInputKeydown(event) {
+Admin.handleChatInputKeydown = function (event) {
     if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         sendChatMessage(event);
     }
 }
 
-function initializeChatInputResize() {
+Admin.initializeChatInputResize = function () {
     const chatInput = document.getElementById("chat-input");
     if (chatInput) {
         chatInput.addEventListener("input", function () {
@@ -26906,7 +26585,7 @@ function initializeChatInputResize() {
 /**
  * Perform server-side search for tools and update the tool list
  */
-async function serverSideToolSearch(searchTerm) {
+Admin.serverSideToolSearch = async function (searchTerm) {
     const container = document.getElementById("associatedTools");
     const noResultsMessage = safeGetElement("noToolsMessage", true);
     const searchQuerySpan = safeGetElement("searchQueryTools", true);
@@ -27003,7 +26682,7 @@ async function serverSideToolSearch(searchTerm) {
         persistedToolIds = Array.from(merged);
 
         // Update both the window fallback and the container attribute
-        window._selectedAssociatedTools = persistedToolIds.slice();
+        Admin._selectedAssociatedTools = persistedToolIds.slice();
         if (persistedToolIds.length > 0) {
             container.setAttribute(
                 "data-selected-tools",
@@ -27078,7 +26757,7 @@ async function serverSideToolSearch(searchTerm) {
                     persistedToolIds = Array.from(merged);
 
                     // Update window fallback
-                    window._selectedAssociatedTools = persistedToolIds.slice();
+                    Admin._selectedAssociatedTools = persistedToolIds.slice();
                 } catch (e) {
                     console.error(
                         "Error capturing current tool selections before clearing search:",
@@ -27390,9 +27069,9 @@ async function serverSideToolSearch(searchTerm) {
 /**
  * Update the tool mapping with tools in the given container
  */
-function updateToolMapping(container) {
+Admin.updateToolMapping = function (container) {
     if (!window.toolMapping) {
-        window.toolMapping = {};
+        Admin.toolMapping = {};
     }
 
     const checkboxes = container.querySelectorAll(
@@ -27402,7 +27081,7 @@ function updateToolMapping(container) {
         const toolId = checkbox.value;
         const toolName = checkbox.getAttribute("data-tool-name");
         if (toolId && toolName) {
-            window.toolMapping[toolId] = toolName;
+            Admin.toolMapping[toolId] = toolName;
         }
     });
 }
@@ -27410,9 +27089,9 @@ function updateToolMapping(container) {
 /**
  * Update the prompt mapping with prompts in the given container
  */
-function updatePromptMapping(container) {
+Admin.updatePromptMapping = function (container) {
     if (!window.promptMapping) {
-        window.promptMapping = {};
+        Admin.promptMapping = {};
     }
 
     const checkboxes = container.querySelectorAll(
@@ -27425,7 +27104,7 @@ function updatePromptMapping(container) {
             checkbox.nextElementSibling?.textContent?.trim() ||
             promptId;
         if (promptId && promptName) {
-            window.promptMapping[promptId] = promptName;
+            Admin.promptMapping[promptId] = promptName;
         }
     });
 }
@@ -27433,9 +27112,9 @@ function updatePromptMapping(container) {
 /**
  * Update the resource mapping with resources in the given container
  */
-function updateResourceMapping(container) {
+Admin.updateResourceMapping = function (container) {
     if (!window.resourceMapping) {
-        window.resourceMapping = {};
+        Admin.resourceMapping = {};
     }
 
     const checkboxes = container.querySelectorAll(
@@ -27448,7 +27127,7 @@ function updateResourceMapping(container) {
             checkbox.nextElementSibling?.textContent?.trim() ||
             resourceId;
         if (resourceId && resourceName) {
-            window.resourceMapping[resourceId] = resourceName;
+            Admin.resourceMapping[resourceId] = resourceName;
         }
     });
 }
@@ -27456,7 +27135,7 @@ function updateResourceMapping(container) {
 /**
  * Perform server-side search for prompts and update the prompt list
  */
-async function serverSidePromptSearch(searchTerm) {
+Admin.serverSidePromptSearch = async function (searchTerm) {
     const container = document.getElementById("associatedPrompts");
     const noResultsMessage = safeGetElement("noPromptsMessage", true);
     const searchQuerySpan = safeGetElement("searchPromptsQuery", true);
@@ -27486,13 +27165,13 @@ async function serverSidePromptSearch(searchTerm) {
             !Array.isArray(window._selectedAssociatedPrompts) ||
             window._selectedAssociatedPrompts.length === 0
         ) {
-            window._selectedAssociatedPrompts = currentChecked.slice();
+            Admin._selectedAssociatedPrompts = currentChecked.slice();
         } else {
             const merged = new Set([
                 ...(window._selectedAssociatedPrompts || []),
                 ...currentChecked,
             ]);
-            window._selectedAssociatedPrompts = Array.from(merged);
+            Admin._selectedAssociatedPrompts = Array.from(merged);
         }
     } catch (e) {
         console.error(
@@ -27744,7 +27423,7 @@ async function serverSidePromptSearch(searchTerm) {
 /**
  * Perform server-side search for resources and update the resouces list
  */
-async function serverSideResourceSearch(searchTerm) {
+Admin.serverSideResourceSearch = async function (searchTerm) {
     const container = document.getElementById("associatedResources");
     const noResultsMessage = safeGetElement("noResourcesMessage", true);
     const searchQuerySpan = safeGetElement("searchResourcesQuery", true);
@@ -27774,13 +27453,13 @@ async function serverSideResourceSearch(searchTerm) {
             !Array.isArray(window._selectedAssociatedResources) ||
             window._selectedAssociatedResources.length === 0
         ) {
-            window._selectedAssociatedResources = currentChecked.slice();
+            Admin._selectedAssociatedResources = currentChecked.slice();
         } else {
             const merged = new Set([
                 ...(window._selectedAssociatedResources || []),
                 ...currentChecked,
             ]);
-            window._selectedAssociatedResources = Array.from(merged);
+            Admin._selectedAssociatedResources = Array.from(merged);
         }
     } catch (e) {
         console.error(
@@ -28057,7 +27736,7 @@ async function serverSideResourceSearch(searchTerm) {
 /**
  * Perform server-side search for tools in the edit-server selector and update the list
  */
-async function serverSideEditToolSearch(searchTerm) {
+Admin.serverSideEditToolSearch = async function (searchTerm) {
     const container = document.getElementById("edit-server-tools");
     const noResultsMessage = safeGetElement("noEditToolsMessage", true);
     const searchQuerySpan = safeGetElement("searchQueryEditTools", true);
@@ -28379,7 +28058,7 @@ async function serverSideEditToolSearch(searchTerm) {
 /**
  * Perform server-side search for prompts in the edit-server selector and update the list
  */
-async function serverSideEditPromptsSearch(searchTerm) {
+Admin.serverSideEditPromptsSearch = async function (searchTerm) {
     const container = document.getElementById("edit-server-prompts");
     const noResultsMessage = safeGetElement("noEditPromptsMessage", true);
     const searchQuerySpan = safeGetElement("searchQueryEditPrompts", true);
@@ -28668,7 +28347,7 @@ async function serverSideEditPromptsSearch(searchTerm) {
 /**
  * Perform server-side search for resources in the edit-server selector and update the list
  */
-async function serverSideEditResourcesSearch(searchTerm) {
+Admin.serverSideEditResourcesSearch = async function (searchTerm) {
     const container = document.getElementById("edit-server-resources");
     const noResultsMessage = safeGetElement("noEditResourcesMessage", true);
     const searchQuerySpan = safeGetElement("searchQueryEditResources", true);
@@ -28979,7 +28658,7 @@ document.head.appendChild(style);
  * Validate CA certificate file on upload (supports multiple files)
  * @param {Event} event - The file input change event
  */
-async function validateCACertFiles(event) {
+Admin.validateCACertFiles = async function (event) {
     const files = Array.from(event.target.files);
     const feedbackEl = document.getElementById("ca-certificate-feedback");
 
@@ -29087,7 +28766,7 @@ async function validateCACertFiles(event) {
  * @param {File} file - The file to read
  * @returns {Promise<string>} - Promise resolving to file content
  */
-function readFileAsync(file) {
+Admin.readFileAsync = function (file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
@@ -29101,7 +28780,7 @@ function readFileAsync(file) {
  * @param {string} content - PEM certificate content
  * @returns {Object} - Certificate info with isRoot flag
  */
-function parseCertificateInfo(content) {
+Admin.parseCertificateInfo = function (content) {
     // Basic heuristic: check if Subject and Issuer appear the same
     // In a real implementation, you'd parse the ASN.1 structure properly
     const subjectMatch = content.match(/Subject:([^\n]+)/i);
@@ -29127,7 +28806,7 @@ function parseCertificateInfo(content) {
  * @param {Array} certResults - Array of certificate result objects
  * @returns {Array} - Ordered array of certificate results
  */
-function orderCertificateChain(certResults) {
+Admin.orderCertificateChain = function (certResults) {
     const roots = certResults.filter((r) => r.certInfo && r.certInfo.isRoot);
     const nonRoots = certResults.filter(
         (r) => r.certInfo && !r.certInfo.isRoot,
@@ -29143,7 +28822,7 @@ function orderCertificateChain(certResults) {
  * @param {Array} certResults - Array of validation result objects
  * @param {HTMLElement} feedbackEl - Element to display feedback
  */
-function displayCertValidationResults(certResults, feedbackEl) {
+Admin.displayCertValidationResults = function (certResults, feedbackEl) {
     const allValid = certResults.every((r) => r.isValid);
 
     let html = '<div class="space-y-2">';
@@ -29194,7 +28873,7 @@ function displayCertValidationResults(certResults, feedbackEl) {
  * @param {string} content - The certificate file content
  * @returns {boolean} - True if valid certificate
  */
-function isValidCertificate(content) {
+Admin.isValidCertificate = function (content) {
     // Trim whitespace
     content = content.trim();
 
@@ -29241,7 +28920,7 @@ function isValidCertificate(content) {
  * @param {string} str - The string to validate
  * @returns {boolean} - True if valid base64
  */
-function isValidBase64(str) {
+Admin.isValidBase64 = function (str) {
     if (str.length === 0) {
         return false;
     }
@@ -29255,7 +28934,7 @@ function isValidBase64(str) {
  * Update drop zone UI with selected file info
  * @param {File} file - The selected file
  */
-function updateDropZoneWithFiles(files) {
+Admin.updateDropZoneWithFiles = function (files) {
     const dropZone = document.getElementById("ca-certificate-upload-drop-zone");
     if (!dropZone) {
         return;
@@ -29286,7 +28965,7 @@ function updateDropZoneWithFiles(files) {
  * @param {number} bytes - File size in bytes
  * @returns {string} - Formatted file size
  */
-function formatFileSize(bytes) {
+Admin.formatFileSize = function (bytes) {
     if (bytes === 0) {
         return "0 Bytes";
     }
@@ -29300,7 +28979,7 @@ function formatFileSize(bytes) {
  * Initialize drag and drop for CA cert upload
  * Called on DOMContentLoaded
  */
-function initializeCACertUpload() {
+Admin.initializeCACertUpload = function () {
     const dropZone = document.getElementById("ca-certificate-upload-drop-zone");
     const fileInput = document.getElementById("upload-ca-certificate");
 
@@ -29353,11 +29032,11 @@ function initializeCACertUpload() {
 
 // Expose CA certificate upload/validation functions for usage in admin.html
 // This ensures ESLint recognizes them as used via global handlers.
-window.validateCACertFiles = validateCACertFiles;
-window.initializeCACertUpload = initializeCACertUpload;
+Admin.validateCACertFiles = validateCACertFiles;
+Admin.initializeCACertUpload = initializeCACertUpload;
 
 // Function to update body label based on content type selection
-function updateBodyLabel() {
+Admin.updateBodyLabel = function () {
     const bodyLabel = document.getElementById("gateway-test-body-label");
     const contentType = document.getElementById(
         "gateway-test-content-type",
@@ -29372,7 +29051,7 @@ function updateBodyLabel() {
 }
 
 // Make it available globally for HTML onclick handlers
-window.updateBodyLabel = updateBodyLabel;
+Admin.updateBodyLabel = updateBodyLabel;
 
 /**
  * ====================================================================
@@ -29385,7 +29064,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initializeRealTimeMonitoring();
 });
 
-function initializeRealTimeMonitoring() {
+Admin.initializeRealTimeMonitoring = function () {
     if (!window.EventSource) {
         return;
     }
@@ -29424,7 +29103,7 @@ function initializeRealTimeMonitoring() {
 /**
  * Generic handler for entity events
  */
-function handleEntityEvent(type, event) {
+Admin.handleEntityEvent = function (type, event) {
     try {
         const data = JSON.parse(event.data);
         // Log the specific event type for debugging
@@ -29439,7 +29118,7 @@ function handleEntityEvent(type, event) {
  * Updates the status badge and action buttons for a row
  */
 
-function updateEntityStatus(type, data) {
+Admin.updateEntityStatus = function (type, data) {
     let row = null;
 
     if (type === "gateway") {
@@ -29584,14 +29263,14 @@ function getPerformanceAggregationQuery(
     return getPerformanceAggregationConfig(rangeKey).query;
 }
 
-function syncPerformanceAggregationSelect() {
+Admin.syncPerformanceAggregationSelect = function () {
     const select = document.getElementById("performance-aggregation-select");
     if (select && select.value !== currentPerformanceAggregationKey) {
         select.value = currentPerformanceAggregationKey;
     }
 }
 
-function setPerformanceAggregationVisibility(shouldShow) {
+Admin.setPerformanceAggregationVisibility = function (shouldShow) {
     const controls = document.getElementById(
         "performance-aggregation-controls",
     );
@@ -29605,7 +29284,7 @@ function setPerformanceAggregationVisibility(shouldShow) {
     }
 }
 
-function setLogFiltersVisibility(shouldShow) {
+Admin.setLogFiltersVisibility = function (shouldShow) {
     const filters = document.getElementById("log-filters");
     if (!filters) {
         return;
@@ -29617,7 +29296,7 @@ function setLogFiltersVisibility(shouldShow) {
     }
 }
 
-function handlePerformanceAggregationChange(event) {
+Admin.handlePerformanceAggregationChange = function (event) {
     const selectedKey = event?.target?.value;
     if (selectedKey && PERFORMANCE_AGGREGATION_OPTIONS[selectedKey]) {
         showPerformanceMetrics(selectedKey);
@@ -29627,7 +29306,7 @@ function handlePerformanceAggregationChange(event) {
 /**
  * Search structured logs with filters
  */
-async function searchStructuredLogs() {
+Admin.searchStructuredLogs = async function () {
     setPerformanceAggregationVisibility(false);
     setLogFiltersVisibility(true);
     const levelFilter = document.getElementById("log-level-filter")?.value;
@@ -29705,7 +29384,7 @@ async function searchStructuredLogs() {
 /**
  * Display log search results
  */
-function displayLogResults(data) {
+Admin.displayLogResults = function (data) {
     const tbody = document.getElementById("logs-tbody");
     const logCount = document.getElementById("log-count");
     const logStats = document.getElementById("log-stats");
@@ -29795,7 +29474,7 @@ function displayLogResults(data) {
 /**
  * Get CSS class for log level badge
  */
-function getLogLevelClass(level) {
+Admin.getLogLevelClass = function (level) {
     const classes = {
         DEBUG: "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200",
         INFO: "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200",
@@ -29811,7 +29490,7 @@ function getLogLevelClass(level) {
 /**
  * Format timestamp for display
  */
-function formatTimestamp(timestamp) {
+Admin.formatTimestamp = function (timestamp) {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
         month: "short",
@@ -29825,7 +29504,7 @@ function formatTimestamp(timestamp) {
 /**
  * Truncate text with ellipsis
  */
-function truncateText(text, maxLength) {
+Admin.truncateText = function (text, maxLength) {
     if (!text) {
         return "";
     }
@@ -29837,7 +29516,7 @@ function truncateText(text, maxLength) {
 /**
  * Show detailed log entry (future enhancement - modal)
  */
-function showLogDetails(logId, correlationId) {
+Admin.showLogDetails = function (logId, correlationId) {
     if (correlationId) {
         showCorrelationTrace(correlationId);
     } else {
@@ -29849,7 +29528,7 @@ function showLogDetails(logId, correlationId) {
 /**
  * Restore default log table headers
  */
-function restoreLogTableHeaders() {
+Admin.restoreLogTableHeaders = function () {
     const thead = document.getElementById("logs-thead");
     if (thead) {
         thead.innerHTML = `
@@ -29883,7 +29562,7 @@ function restoreLogTableHeaders() {
 /**
  * Trace all logs for a correlation ID
  */
-async function showCorrelationTrace(correlationId) {
+Admin.showCorrelationTrace = async function (correlationId) {
     setPerformanceAggregationVisibility(false);
     setLogFiltersVisibility(true);
     if (!correlationId) {
@@ -29923,7 +29602,7 @@ async function showCorrelationTrace(correlationId) {
 /**
  * Generates the HTML for the status badge (Active/Inactive/Offline)
  */
-function generateStatusBadgeHtml(enabled, reachable, typeLabel) {
+Admin.generateStatusBadgeHtml = function (enabled, reachable, typeLabel) {
     const label = typeLabel
         ? typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)
         : "Item";
@@ -29964,7 +29643,7 @@ function generateStatusBadgeHtml(enabled, reachable, typeLabel) {
 /**
  * Dynamically updates the action buttons (Activate/Deactivate) inside the table cell
  */
-function updateEntityActionButtons(cell, type, id, isEnabled) {
+Admin.updateEntityActionButtons = function (cell, type, id, isEnabled) {
     // We look for the form that toggles activation inside the cell
     const form = cell.querySelector('form[action*="/state"]');
     if (!form) {
@@ -29997,7 +29676,7 @@ function updateEntityActionButtons(cell, type, id, isEnabled) {
 console.log("🔧 LOADING MCP SERVERS SEARCH DEBUG FUNCTIONS...");
 
 // Emergency fix function for MCP Servers search
-window.emergencyFixMCPSearch = function () {
+Admin.emergencyFixMCPSearch = function () {
     console.log("🚨 EMERGENCY FIX: Attempting to fix MCP Servers search...");
 
     // Find the search input
@@ -30027,13 +29706,13 @@ window.emergencyFixMCPSearch = function () {
 };
 
 // Manual test function
-window.testMCPSearchManually = function (searchTerm = "github") {
+Admin.testMCPSearchManually = function (searchTerm = "github") {
     console.log("🧪 MANUAL TEST: Testing MCP search with:", searchTerm);
     filterGatewaysTable(searchTerm);
 };
 
 // Debug current state function
-window.debugMCPSearchState = function () {
+Admin.debugMCPSearchState = function () {
     console.log("🔍 DEBUGGING MCP SEARCH STATE:");
 
     const searchInput = document.getElementById("gateways-search-input");
@@ -30080,7 +29759,7 @@ console.log("💡 Use: window.debugMCPSearchState() to check current state");
 /**
  * Display correlation trace results
  */
-function displayCorrelationTrace(trace) {
+Admin.displayCorrelationTrace = function (trace) {
     const tbody = document.getElementById("logs-tbody");
     const thead = document.getElementById("logs-thead");
     const logCount = document.getElementById("log-count");
@@ -30305,7 +29984,7 @@ function displayCorrelationTrace(trace) {
 /**
  * Show security events
  */
-async function showSecurityEvents() {
+Admin.showSecurityEvents = async function () {
     setPerformanceAggregationVisibility(false);
     setLogFiltersVisibility(false);
     try {
@@ -30333,7 +30012,7 @@ async function showSecurityEvents() {
 /**
  * Display security events
  */
-function displaySecurityEvents(events) {
+Admin.displaySecurityEvents = function (events) {
     const tbody = document.getElementById("logs-tbody");
     const thead = document.getElementById("logs-thead");
     const logCount = document.getElementById("log-count");
@@ -30437,7 +30116,7 @@ function displaySecurityEvents(events) {
 /**
  * Get CSS class for severity badge
  */
-function getSeverityClass(severity) {
+Admin.getSeverityClass = function (severity) {
     const classes = {
         LOW: "bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200",
         MEDIUM: "bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200",
@@ -30450,7 +30129,7 @@ function getSeverityClass(severity) {
 /**
  * Show audit trail
  */
-async function showAuditTrail() {
+Admin.showAuditTrail = async function () {
     setPerformanceAggregationVisibility(false);
     setLogFiltersVisibility(false);
     try {
@@ -30478,7 +30157,7 @@ async function showAuditTrail() {
 /**
  * Display audit trail entries
  */
-function displayAuditTrail(trails) {
+Admin.displayAuditTrail = function (trails) {
     const tbody = document.getElementById("logs-tbody");
     const thead = document.getElementById("logs-thead");
     const logCount = document.getElementById("log-count");
@@ -30603,7 +30282,7 @@ function displayAuditTrail(trails) {
 /**
  * Show performance metrics
  */
-async function showPerformanceMetrics(rangeKey) {
+Admin.showPerformanceMetrics = async function (rangeKey) {
     if (rangeKey && PERFORMANCE_AGGREGATION_OPTIONS[rangeKey]) {
         currentPerformanceAggregationKey = rangeKey;
     } else {
@@ -30651,7 +30330,7 @@ async function showPerformanceMetrics(rangeKey) {
 /**
  * Display performance metrics
  */
-function displayPerformanceMetrics(metrics) {
+Admin.displayPerformanceMetrics = function (metrics) {
     const tbody = document.getElementById("logs-tbody");
     const thead = document.getElementById("logs-thead");
     const logCount = document.getElementById("log-count");
@@ -30747,7 +30426,7 @@ function displayPerformanceMetrics(metrics) {
 /**
  * Navigate to previous log page
  */
-function previousLogPage() {
+Admin.previousLogPage = function () {
     if (currentLogPage > 0) {
         currentLogPage--;
         searchStructuredLogs();
@@ -30757,7 +30436,7 @@ function previousLogPage() {
 /**
  * Navigate to next log page
  */
-function nextLogPage() {
+Admin.nextLogPage = function () {
     currentLogPage++;
     searchStructuredLogs();
 }
@@ -30765,14 +30444,14 @@ function nextLogPage() {
 /**
  * Get root path for API calls
  */
-function getRootPath() {
+Admin.getRootPath = function () {
     return window.ROOT_PATH || "";
 }
 
 /**
  * Show toast notification
  */
-function showToast(message, type = "info") {
+Admin.showToast = function (message, type = "info") {
     // Check if showMessage function exists (from existing admin.js)
     if (typeof showMessage === "function") {
         // eslint-disable-next-line no-undef
@@ -30783,15 +30462,15 @@ function showToast(message, type = "info") {
 }
 
 // Make functions globally available for HTML onclick handlers
-window.searchStructuredLogs = searchStructuredLogs;
-window.showCorrelationTrace = showCorrelationTrace;
-window.showSecurityEvents = showSecurityEvents;
-window.showAuditTrail = showAuditTrail;
-window.showPerformanceMetrics = showPerformanceMetrics;
-window.handlePerformanceAggregationChange = handlePerformanceAggregationChange;
-window.previousLogPage = previousLogPage;
-window.nextLogPage = nextLogPage;
-window.showLogDetails = showLogDetails;
+Admin.searchStructuredLogs = searchStructuredLogs;
+Admin.showCorrelationTrace = showCorrelationTrace;
+Admin.showSecurityEvents = showSecurityEvents;
+Admin.showAuditTrail = showAuditTrail;
+Admin.showPerformanceMetrics = showPerformanceMetrics;
+Admin.handlePerformanceAggregationChange = handlePerformanceAggregationChange;
+Admin.previousLogPage = previousLogPage;
+Admin.nextLogPage = nextLogPage;
+Admin.showLogDetails = showLogDetails;
 
 // ===================================================================
 // LLM SETTINGS FUNCTIONS
@@ -30800,7 +30479,7 @@ window.showLogDetails = showLogDetails;
 /**
  * Switch between LLM Settings tabs (providers/models)
  */
-function switchLLMSettingsTab(tabName) {
+Admin.switchLLMSettingsTab = function (tabName) {
     // Hide all content panels
     const panels = document.querySelectorAll(".llm-settings-content");
     panels.forEach((panel) => panel.classList.add("hidden"));
@@ -30858,7 +30537,7 @@ let llmProviderDefaults = null;
 /**
  * Load provider defaults from the server
  */
-async function loadLLMProviderDefaults() {
+Admin.loadLLMProviderDefaults = async function () {
     if (llmProviderDefaults) {
         return llmProviderDefaults;
     }
@@ -30886,7 +30565,7 @@ let previousProviderType = null;
 /**
  * Handle provider type change - auto-fill defaults
  */
-async function onLLMProviderTypeChange() {
+Admin.onLLMProviderTypeChange = async function () {
     const providerType = document.getElementById("llm-provider-type").value;
     if (!providerType) {
         // Hide provider-specific config section
@@ -30975,7 +30654,7 @@ async function onLLMProviderTypeChange() {
 /**
  * Render provider-specific configuration fields dynamically
  */
-async function renderProviderSpecificFields(providerType, isEditing = false) {
+Admin.renderProviderSpecificFields = async function (providerType, isEditing = false) {
     try {
         // Fetch provider configurations
         const response = await fetch(
@@ -31127,7 +30806,7 @@ async function renderProviderSpecificFields(providerType, isEditing = false) {
 /**
  * Show Add Provider Modal
  */
-async function showAddProviderModal() {
+Admin.showAddProviderModal = async function () {
     document.getElementById("llm-provider-id").value = "";
     document.getElementById("llm-provider-form").reset();
     document.getElementById("llm-provider-modal-title").textContent =
@@ -31151,14 +30830,14 @@ async function showAddProviderModal() {
 /**
  * Close Provider Modal
  */
-function closeLLMProviderModal() {
+Admin.closeLLMProviderModal = function () {
     document.getElementById("llm-provider-modal").classList.add("hidden");
 }
 
 /**
  * Fetch models from a provider's API
  */
-async function fetchLLMProviderModels(providerId) {
+Admin.fetchLLMProviderModels = async function (providerId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/admin/llm/providers/${providerId}/fetch-models`,
@@ -31200,7 +30879,7 @@ async function fetchLLMProviderModels(providerId) {
 /**
  * Sync models from provider API to database
  */
-async function syncLLMProviderModels(providerId) {
+Admin.syncLLMProviderModels = async function (providerId) {
     try {
         showToast("Syncing models...", "info");
 
@@ -31243,7 +30922,7 @@ async function syncLLMProviderModels(providerId) {
 /**
  * Edit LLM Provider
  */
-async function editLLMProvider(providerId) {
+Admin.editLLMProvider = async function (providerId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/llm/providers/${providerId}`,
@@ -31307,7 +30986,7 @@ async function editLLMProvider(providerId) {
 /**
  * Save LLM Provider (create or update)
  */
-async function saveLLMProvider(event) {
+Admin.saveLLMProvider = async function (event) {
     event.preventDefault();
 
     const providerId = document.getElementById("llm-provider-id").value;
@@ -31408,7 +31087,7 @@ async function saveLLMProvider(event) {
 /**
  * Delete LLM Provider
  */
-async function deleteLLMProvider(providerId, providerName) {
+Admin.deleteLLMProvider = async function (providerId, providerName) {
     if (
         !confirm(
             `Are you sure you want to delete the provider "${providerName}"? This will also delete all associated models.`,
@@ -31447,7 +31126,7 @@ async function deleteLLMProvider(providerId, providerName) {
 /**
  * Toggle LLM Provider enabled state
  */
-async function toggleLLMProvider(providerId) {
+Admin.toggleLLMProvider = async function (providerId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/llm/providers/${providerId}/state`,
@@ -31473,7 +31152,7 @@ async function toggleLLMProvider(providerId) {
 /**
  * Check LLM Provider health
  */
-async function checkLLMProviderHealth(providerId) {
+Admin.checkLLMProviderHealth = async function (providerId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/admin/llm/providers/${providerId}/health`,
@@ -31518,7 +31197,7 @@ async function checkLLMProviderHealth(providerId) {
 /**
  * Refresh LLM Providers list
  */
-function refreshLLMProviders() {
+Admin.refreshLLMProviders = function () {
     const container = document.getElementById("llm-providers-container");
     if (container) {
         htmx.ajax("GET", `${window.ROOT_PATH}/admin/llm/providers/html`, {
@@ -31531,7 +31210,7 @@ function refreshLLMProviders() {
 /**
  * Show Add Model Modal
  */
-async function showAddModelModal() {
+Admin.showAddModelModal = async function () {
     document.getElementById("llm-model-id").value = "";
     document.getElementById("llm-model-form").reset();
     document.getElementById("llm-model-modal-title").textContent =
@@ -31546,7 +31225,7 @@ async function showAddModelModal() {
 /**
  * Populate provider dropdown in model modal
  */
-async function populateProviderDropdown() {
+Admin.populateProviderDropdown = async function () {
     try {
         const response = await fetch(`${window.ROOT_PATH}/llm/providers`, {
             headers: {
@@ -31575,14 +31254,14 @@ async function populateProviderDropdown() {
 /**
  * Close Model Modal
  */
-function closeLLMModelModal() {
+Admin.closeLLMModelModal = function () {
     document.getElementById("llm-model-modal").classList.add("hidden");
 }
 
 /**
  * Handle provider change in model modal - auto-fetch models
  */
-async function onModelProviderChange() {
+Admin.onModelProviderChange = async function () {
     const providerId = document.getElementById("llm-model-provider").value;
     const modelInput = document.getElementById("llm-model-model-id");
     const datalist = document.getElementById("llm-model-suggestions");
@@ -31606,7 +31285,7 @@ async function onModelProviderChange() {
 /**
  * Fetch available models for the model modal
  */
-async function fetchModelsForModelModal() {
+Admin.fetchModelsForModelModal = async function () {
     const providerId = document.getElementById("llm-model-provider").value;
     const datalist = document.getElementById("llm-model-suggestions");
     const statusEl = document.getElementById("llm-model-fetch-status");
@@ -31657,13 +31336,13 @@ async function fetchModelsForModelModal() {
     }
 }
 
-window.onModelProviderChange = onModelProviderChange;
-window.fetchModelsForModelModal = fetchModelsForModelModal;
+Admin.onModelProviderChange = onModelProviderChange;
+Admin.fetchModelsForModelModal = fetchModelsForModelModal;
 
 /**
  * Edit LLM Model
  */
-async function editLLMModel(modelId) {
+Admin.editLLMModel = async function (modelId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/llm/models/${modelId}`,
@@ -31716,7 +31395,7 @@ async function editLLMModel(modelId) {
 /**
  * Save LLM Model (create or update)
  */
-async function saveLLMModel(event) {
+Admin.saveLLMModel = async function (event) {
     event.preventDefault();
 
     const modelId = document.getElementById("llm-model-id").value;
@@ -31795,7 +31474,7 @@ async function saveLLMModel(event) {
 /**
  * Delete LLM Model
  */
-async function deleteLLMModel(modelId, modelName) {
+Admin.deleteLLMModel = async function (modelId, modelName) {
     if (!confirm(`Are you sure you want to delete the model "${modelName}"?`)) {
         return;
     }
@@ -31830,7 +31509,7 @@ async function deleteLLMModel(modelId, modelName) {
 /**
  * Toggle LLM Model enabled state
  */
-async function toggleLLMModel(modelId) {
+Admin.toggleLLMModel = async function (modelId) {
     try {
         const response = await fetch(
             `${window.ROOT_PATH}/llm/models/${modelId}/state`,
@@ -31856,7 +31535,7 @@ async function toggleLLMModel(modelId) {
 /**
  * Refresh LLM Models list
  */
-function refreshLLMModels() {
+Admin.refreshLLMModels = function () {
     const container = document.getElementById("llm-models-container");
     if (container) {
         htmx.ajax("GET", `${window.ROOT_PATH}/admin/llm/models/html`, {
@@ -31869,7 +31548,7 @@ function refreshLLMModels() {
 /**
  * Filter models by provider
  */
-function filterModelsByProvider(providerId) {
+Admin.filterModelsByProvider = function (providerId) {
     const url = providerId
         ? `${window.ROOT_PATH}/admin/llm/models/html?provider_id=${providerId}`
         : `${window.ROOT_PATH}/admin/llm/models/html`;
@@ -31883,7 +31562,7 @@ function filterModelsByProvider(providerId) {
 /**
  * Alpine.js component for LLM API Info & Test
  */
-function llmApiInfoApp() {
+Admin.llmApiInfoApp = function () {
     return {
         testType: "models",
         testModel: "",
@@ -32013,7 +31692,7 @@ function llmApiInfoApp() {
     };
 }
 
-window.overviewDashboard = function () {
+Admin.overviewDashboard = function () {
     return {
         init() {
             this.updateSvgColors();
@@ -32042,31 +31721,31 @@ window.overviewDashboard = function () {
 };
 
 // Make LLM functions globally available
-window.switchLLMSettingsTab = switchLLMSettingsTab;
-window.showAddProviderModal = showAddProviderModal;
-window.closeLLMProviderModal = closeLLMProviderModal;
-window.editLLMProvider = editLLMProvider;
-window.saveLLMProvider = saveLLMProvider;
-window.deleteLLMProvider = deleteLLMProvider;
-window.toggleLLMProvider = toggleLLMProvider;
-window.checkLLMProviderHealth = checkLLMProviderHealth;
-window.refreshLLMProviders = refreshLLMProviders;
-window.onLLMProviderTypeChange = onLLMProviderTypeChange;
-window.fetchLLMProviderModels = fetchLLMProviderModels;
-window.syncLLMProviderModels = syncLLMProviderModels;
-window.showAddModelModal = showAddModelModal;
-window.closeLLMModelModal = closeLLMModelModal;
-window.editLLMModel = editLLMModel;
-window.saveLLMModel = saveLLMModel;
-window.deleteLLMModel = deleteLLMModel;
-window.toggleLLMModel = toggleLLMModel;
-window.refreshLLMModels = refreshLLMModels;
-window.filterModelsByProvider = filterModelsByProvider;
-window.llmApiInfoApp = llmApiInfoApp;
+Admin.switchLLMSettingsTab = switchLLMSettingsTab;
+Admin.showAddProviderModal = showAddProviderModal;
+Admin.closeLLMProviderModal = closeLLMProviderModal;
+Admin.editLLMProvider = editLLMProvider;
+Admin.saveLLMProvider = saveLLMProvider;
+Admin.deleteLLMProvider = deleteLLMProvider;
+Admin.toggleLLMProvider = toggleLLMProvider;
+Admin.checkLLMProviderHealth = checkLLMProviderHealth;
+Admin.refreshLLMProviders = refreshLLMProviders;
+Admin.onLLMProviderTypeChange = onLLMProviderTypeChange;
+Admin.fetchLLMProviderModels = fetchLLMProviderModels;
+Admin.syncLLMProviderModels = syncLLMProviderModels;
+Admin.showAddModelModal = showAddModelModal;
+Admin.closeLLMModelModal = closeLLMModelModal;
+Admin.editLLMModel = editLLMModel;
+Admin.saveLLMModel = saveLLMModel;
+Admin.deleteLLMModel = deleteLLMModel;
+Admin.toggleLLMModel = toggleLLMModel;
+Admin.refreshLLMModels = refreshLLMModels;
+Admin.filterModelsByProvider = filterModelsByProvider;
+Admin.llmApiInfoApp = llmApiInfoApp;
 
 // Debounce helper for search
 const searchDebounceTimers = {};
-function debouncedServerSideUserSearch(teamId, searchTerm, delay = 300) {
+Admin.debouncedServerSideUserSearch = function (teamId, searchTerm, delay = 300) {
     if (searchDebounceTimers[teamId]) {
         clearTimeout(searchDebounceTimers[teamId]);
     }
@@ -32074,10 +31753,10 @@ function debouncedServerSideUserSearch(teamId, searchTerm, delay = 300) {
         serverSideUserSearch(teamId, searchTerm);
     }, delay);
 }
-window.debouncedServerSideUserSearch = debouncedServerSideUserSearch;
+Admin.debouncedServerSideUserSearch = debouncedServerSideUserSearch;
 
 // Team user search function - searches all users and splits into members/non-members
-async function serverSideUserSearch(teamId, searchTerm) {
+Admin.serverSideUserSearch = async function (teamId, searchTerm) {
     const membersContainer = document.getElementById(
         `team-members-container-${teamId}`,
     );
@@ -32227,7 +31906,7 @@ async function serverSideUserSearch(teamId, searchTerm) {
             });
 
             // Helper to escape HTML
-            function escapeHtml(text) {
+Admin.escapeHtml = function (text) {
                 const div = document.createElement("div");
                 div.textContent = text;
                 return div.innerHTML;
@@ -32330,7 +32009,7 @@ async function serverSideUserSearch(teamId, searchTerm) {
     }
 }
 
-window.serverSideUserSearch = serverSideUserSearch;
+Admin.serverSideUserSearch = serverSideUserSearch;
 
 // ============================================================================ //
 //                         TEAM SEARCH AND FILTER FUNCTIONS                      //
@@ -32350,7 +32029,7 @@ let currentTeamRelationshipFilter = "all";
  * Perform server-side search for teams and update the teams list
  * @param {string} searchTerm - The search query
  */
-function serverSideTeamSearch(searchTerm) {
+Admin.serverSideTeamSearch = function (searchTerm) {
     // Debounce the search to avoid excessive API calls
     if (teamSearchDebounceTimer) {
         clearTimeout(teamSearchDebounceTimer);
@@ -32369,7 +32048,7 @@ const DEFAULT_TEAMS_PER_PAGE = 10;
 /**
  * Get current per_page value from pagination controls or use default
  */
-function getTeamsPerPage() {
+Admin.getTeamsPerPage = function () {
     // Try to get from pagination controls select element
     const paginationControls = document.getElementById(
         "teams-pagination-controls",
@@ -32387,7 +32066,7 @@ function getTeamsPerPage() {
  * Actually perform the team search after debounce
  * @param {string} searchTerm - The search query
  */
-async function performTeamSearch(searchTerm) {
+Admin.performTeamSearch = async function (searchTerm) {
     const container = document.getElementById("unified-teams-list");
     const loadingIndicator = document.getElementById("teams-loading");
 
@@ -32470,7 +32149,7 @@ async function performTeamSearch(searchTerm) {
  * Filter teams by relationship (owner, member, public, all)
  * @param {string} filter - The relationship filter value
  */
-function filterByRelationship(filter) {
+Admin.filterByRelationship = function (filter) {
     // Update button states
     const filterButtons = document.querySelectorAll(".filter-btn");
     filterButtons.forEach((btn) => {
@@ -32524,7 +32203,7 @@ function filterByRelationship(filter) {
  * Legacy filterTeams function - redirects to serverSideTeamSearch
  * @param {string} searchValue - The search query
  */
-function filterTeams(searchValue) {
+Admin.filterTeams = function (searchValue) {
     serverSideTeamSearch(searchValue);
 }
 
@@ -32541,7 +32220,7 @@ let teamSelectorSearchDebounceTimer = null;
  * Search teams in the team selector dropdown
  * @param {string} searchTerm - The search query
  */
-function searchTeamSelector(searchTerm) {
+Admin.searchTeamSelector = function (searchTerm) {
     // Debounce the search
     if (teamSelectorSearchDebounceTimer) {
         clearTimeout(teamSelectorSearchDebounceTimer);
@@ -32556,7 +32235,7 @@ function searchTeamSelector(searchTerm) {
  * Perform the team selector search
  * @param {string} searchTerm - The search query
  */
-function performTeamSelectorSearch(searchTerm) {
+Admin.performTeamSelectorSearch = function (searchTerm) {
     const container = document.getElementById("team-selector-items");
     if (!container) {
         console.error("team-selector-items container not found");
@@ -32588,7 +32267,7 @@ function performTeamSelectorSearch(searchTerm) {
  * Select a team from the team selector dropdown
  * @param {HTMLElement} button - The button element that was clicked
  */
-function selectTeamFromSelector(button) {
+Admin.selectTeamFromSelector = function (button) {
     const teamId = button.dataset.teamId;
     const teamName = button.dataset.teamName;
     const isPersonal = button.dataset.teamIsPersonal === "true";
@@ -32621,12 +32300,12 @@ function selectTeamFromSelector(button) {
 }
 
 // Make team functions globally available
-window.serverSideTeamSearch = serverSideTeamSearch;
-window.filterByRelationship = filterByRelationship;
-window.filterTeams = filterTeams;
-window.searchTeamSelector = searchTeamSelector;
-window.selectTeamFromSelector = selectTeamFromSelector;
-window.getTeamsCurrentPaginationState = getTeamsCurrentPaginationState;
+Admin.serverSideTeamSearch = serverSideTeamSearch;
+Admin.filterByRelationship = filterByRelationship;
+Admin.filterTeams = filterTeams;
+Admin.searchTeamSelector = searchTeamSelector;
+Admin.selectTeamFromSelector = selectTeamFromSelector;
+Admin.getTeamsCurrentPaginationState = getTeamsCurrentPaginationState;
 
 /**
  * Handle keydown event when Enter or Space key is pressed
@@ -32641,7 +32320,7 @@ function handleKeydown(event, callback) {
     }
 }
 
-window.handleKeydown = handleKeydown;
+Admin.handleKeydown = handleKeydown;
 
 /**
  * Defense-in-depth: audit mutation buttons after every HTMX partial swap.
