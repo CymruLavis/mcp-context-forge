@@ -32079,7 +32079,6 @@ Admin.selectTeamFromSelector = function (button) {
 Admin.chartRegistry = {
     charts: new Map(),
 
-    
     register(id, chart) {
         // Destroy existing chart with same ID before registering new one
         if (this.charts.has(id)) {
@@ -32089,7 +32088,6 @@ Admin.chartRegistry = {
         console.log(`Chart registered: ${id}`);
     },
 
-    
     destroy(id) {
         const chart = this.charts.get(id);
         if (chart) {
@@ -32103,7 +32101,6 @@ Admin.chartRegistry = {
         }
     },
 
-    
     destroyAll() {
         console.log(`Destroying all charts (${this.charts.size} total)`);
         this.charts.forEach((chart, id) => {
@@ -32111,7 +32108,6 @@ Admin.chartRegistry = {
         });
     },
 
-    
     destroyByPrefix(prefix) {
         const toDestroy = [];
         this.charts.forEach((chart, id) => {
@@ -32125,17 +32121,14 @@ Admin.chartRegistry = {
         toDestroy.forEach((id) => this.destroy(id));
     },
 
-    
     has(id) {
         return this.charts.has(id);
     },
 
-    
     get(id) {
         return this.charts.get(id);
     },
 
-    
     size() {
         return this.charts.size;
     },
