@@ -1559,9 +1559,6 @@ Admin.retryLoadMetrics = function () {
     Admin.loadAggregatedMetrics();
 }
 
-// Make retry function available globally immediately
-Admin.retryLoadMetrics = retryLoadMetrics;
-
 Admin.showMetricsPlaceholder = function () {
     const aggregatedSection = Admin.safeGetElement("aggregated-metrics-section");
     if (aggregatedSection) {
@@ -11471,7 +11468,7 @@ Admin.handleSubmitWithConfirmation = function (event, type) {
     event.preventDefault();
 
     const confirmationMessage = `Are you sure you want to permanently delete this ${type}? (Deactivation is reversible, deletion is permanent)`;
-    const confirmation = confirm(confirmationMessage);
+    const confirmation = Admin.confirm(confirmationMessage);
     if (!confirmation) {
         return false;
     }
@@ -11484,12 +11481,12 @@ Admin.handleDeleteSubmit = function (event, type, name = "", inactiveType = "") 
 
     const targetName = name ? `${type} "${name}"` : `this ${type}`;
     const confirmationMessage = `Are you sure you want to permanently delete ${targetName}? (Deactivation is reversible, deletion is permanent)`;
-    const confirmation = confirm(confirmationMessage);
+    const confirmation = Admin.confirm(confirmationMessage);
     if (!confirmation) {
         return false;
     }
 
-    const purgeConfirmation = confirm(
+    const purgeConfirmation = Admin.confirm(
         `Also purge ALL metrics history for ${targetName}? This deletes raw metrics and hourly rollups and cannot be undone.`,
     );
     if (purgeConfirmation) {
@@ -15366,7 +15363,7 @@ Admin.handleGatewayFormSubmit = async function (e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#gateways`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -15451,7 +15448,7 @@ Admin.handleResourceFormSubmit = async function (e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#resources`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -15520,7 +15517,7 @@ Admin.handlePromptFormSubmit = async function (e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#prompts`;
-        Admin.location.href = redirectUrl;
+        window.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         if (status) {
@@ -15594,7 +15591,7 @@ Admin.handleEditPromptFormSubmit = async function (e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#prompts`;
-        Admin.location.href = redirectUrl;
+        window.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         Admin.showErrorMessage(error.message);
@@ -15662,7 +15659,7 @@ Admin.handleServerFormSubmit = async function (e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#catalog`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Add Server Error:", error);
@@ -15791,7 +15788,7 @@ Admin.handleA2AFormSubmit = async function (e) {
 
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#a2a-agents`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Add A2A Agent Error:", error);
@@ -15891,7 +15888,7 @@ Admin.handleToolFormSubmit = async function (event) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#tools`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Fetch error:", error);
@@ -15961,7 +15958,7 @@ Admin.handleEditToolFormSubmit = async function (event) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#tools`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Fetch error:", error);
@@ -16056,7 +16053,7 @@ Admin.handleEditGatewayFormSubmit = async function (e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#gateways`;
-        Admin.location.href = redirectUrl;
+        window.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         Admin.showErrorMessage(error.message);
@@ -16157,7 +16154,7 @@ Admin.handleEditA2AAgentFormSubmit = async function (e) {
         }
         const queryString = searchParams.toString();
         const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#a2a-agents`;
-        Admin.location.href = redirectUrl;
+        window.location.href = redirectUrl;
     } catch (error) {
         console.error("Error:", error);
         Admin.showErrorMessage(error.message);
@@ -16216,7 +16213,7 @@ Admin.handleEditServerFormSubmit = async function (e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#catalog`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -16291,7 +16288,7 @@ Admin.handleEditResFormSubmit = async function (e) {
             }
             const queryString = searchParams.toString();
             const redirectUrl = `${window.ROOT_PATH}/admin${queryString ? `?${queryString}` : ""}#resources`;
-            Admin.location.href = redirectUrl;
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error:", error);
@@ -16642,7 +16639,7 @@ Admin.setupTooltipsWithAlpine = function () {
                 document.body.appendChild(tooltipEl);
 
                 if (event?.clientX && event?.clientY) {
-                    moveTooltip(event);
+                    Admin.moveTooltip(event);
                     el.addEventListener("mousemove", moveTooltip);
                 } else {
                     const rect = el.getBoundingClientRect();
@@ -16657,7 +16654,7 @@ Admin.setupTooltipsWithAlpine = function () {
                     Admin.cancelAnimationFrame(animationFrameId);
                 }
 
-                animationFrameId = requestAnimationFrame(() => {
+                animationFrameId = Admin.requestAnimationFrame(() => {
                     // FIX: Check if tooltipEl still exists before accessing its style
                     if (tooltipEl) {
                         tooltipEl.style.opacity = "1";
@@ -18496,7 +18493,7 @@ Admin.loadServers = async function () {
 
     // Reload the page with the updated parameters
     // Since the catalog panel is server-side rendered, we need a full page reload
-    Admin.location.href = url.toString();
+    window.location.href = url.toString();
 }
 
 Admin.loadServers = loadServers;
@@ -22749,7 +22746,7 @@ Admin.leaveTeam = async function (teamId, teamName) {
     }
 
     // Show confirmation dialog
-    const confirmed = confirm(
+    const confirmed = Admin.confirm(
         `Are you sure you want to leave the team "${teamName}"? This action cannot be undone.`,
     );
     if (!confirmed) {
@@ -22859,7 +22856,7 @@ Admin.rejectJoinRequest = async function (teamId, requestId) {
         return;
     }
 
-    const confirmed = confirm(
+    const confirmed = Admin.confirm(
         "Are you sure you want to reject this join request?",
     );
     if (!confirmed) {
@@ -26367,7 +26364,7 @@ Admin.scrollChatToBottom = function (force = false) {
     const container = Admin.safeGetElement("chat-messages-container");
     if (container) {
         if (force || llmChatState.autoScroll) {
-            requestAnimationFrame(() => {
+            Admin.requestAnimationFrame(() => {
                 // Use instant scroll during streaming for better UX
                 container.scrollTop = container.scrollHeight;
             });
