@@ -2627,7 +2627,7 @@ ifneq ($(filter lint lint-quick lint-fix lint-smart,$(MAKECMDGOALS)),)
 endif
 
 # List of individual lint targets
-LINTERS := isort flake8 pylint mypy bandit pydocstyle pycodestyle pre-commit \
+LINTERS := isort flake8 pylint mypy bandit pydocstyle pycodestyle \
 	ruff ty pyright radon pyroma pyrefly spellcheck importchecker \
 		pytype check-manifest markdownlint vulture unimport
 
@@ -3741,6 +3741,7 @@ tomllint:                         ## 📑 TOML validation (tomlcheck)
 	@/bin/bash -c "source $(VENV_DIR)/bin/activate && \
 		uv pip install -q tomlcheck 2>/dev/null || true"
 	@find . -type f -name '*.toml' \
+	  -not -path './.cache/*' \
 	  -not -path './plugin_templates/*' \
 	  -not -path './mcp-servers/templates/*' \
 	  -print0 \
