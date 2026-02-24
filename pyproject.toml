@@ -292,6 +292,7 @@ playwright = [
     "pytest-html>=4.2.0",
     "pytest-playwright>=0.7.2",
     "pytest-timeout>=2.4.0",
+    "python-owasp-zap-v2.4>=0.0.21",
 ]
 
 # Convenience meta-extras
@@ -638,6 +639,8 @@ markers = [
     "mcp_tasks: marks tasks capability checks",
     "mcp_auth: marks authorization discovery checks",
     "mcp_security: marks security compliance checks",
+    "owasp_a01: marks OWASP A01:2025 Broken Access Control security tests",
+    "owasp_a01_zap: marks OWASP A01 ZAP DAST scan tests (requires ZAP daemon; set ZAP_BASE_URL)",
 ]
 
 # Playwright-specific test discovery patterns
