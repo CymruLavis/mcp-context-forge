@@ -1933,6 +1933,25 @@ class ResourceService:
                             except Exception as metrics_error:
                                 logger.warning(f"Failed to invoke resource metric: {metrics_error}")
 
+                            # Record server metrics ONLY when invoked through a specific virtual server
+                            # When server_id is provided, it means the resource was called via a virtual server endpoint
+                            # Direct resource calls via /rpc should NOT populate server metrics
+                            if resource_id and server_id:
+                                try:
+                                    # First-Party
+                                    from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
+
+                                    metrics_buffer = get_metrics_buffer_service()
+                                    # Record server metric only for the specific virtual server being accessed
+                                    metrics_buffer.record_server_metric(
+                                        server_id=server_id,
+                                        start_time=start_time,
+                                        success=success,
+                                        error_message=error_message,
+                                    )
+                                except Exception as metrics_error:
+                                    logger.warning(f"Failed to record server metric: {metrics_error}")
+
                             # End Invoke resource span for Observability dashboard
                             # NOTE: Use fresh_db_session() since the original db was released
                             # before making HTTP calls to prevent connection pool exhaustion

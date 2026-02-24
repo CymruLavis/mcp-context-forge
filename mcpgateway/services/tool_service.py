@@ -2825,8 +2825,8 @@ class ToolService:
         """
         # pylint: disable=comparison-with-callable
         logger.info(f"Invoking tool: {name} with arguments: {arguments.keys() if arguments else None} and headers: {request_headers.keys() if request_headers else None}")
-
-        # ═══════════════════════════════════════════════════════════════════════════
+        logger.info(f"Invoking tool: server_id:{server_id}")
+       # ═══════════════════════════════════════════════════════════════════════════
         # PHASE 1: Check for X-Context-Forge-Gateway-Id header for direct_proxy mode (no DB lookup)
         # ═══════════════════════════════════════════════════════════════════════════
         gateway_id_from_header = extract_gateway_id_from_headers(request_headers)
@@ -3167,20 +3167,27 @@ class ToolService:
 
         # Reuse existing global_context from middleware or create new one
         # IMPORTANT: Use local variables (tool_gateway_id) instead of ORM object access
+        # Determine a context server id without overwriting the original function parameter
+        if server_id and isinstance(server_id, str):
+            context_server_id = server_id
+        elif tool_gateway_id and isinstance(tool_gateway_id, str):
+            context_server_id = tool_gateway_id
+        else:
+            context_server_id = "unknown"
+
         if plugin_global_context:
             global_context = plugin_global_context
-            # Update server_id using local variable (not ORM access)
-            if tool_gateway_id and isinstance(tool_gateway_id, str):
-                global_context.server_id = tool_gateway_id
-            # Propagate user email to global context for plugin access
+            # Only set server_id if not already present on the provided global context
+            if not getattr(global_context, "server_id", None):
+                global_context.server_id = context_server_id
+            # Propagate user email to global context for plugin access when missing
             if not plugin_global_context.user and app_user_email and isinstance(app_user_email, str):
                 global_context.user = app_user_email
         else:
             # Create new context (fallback when middleware didn't run)
             # Use correlation ID from context if available, otherwise generate new one
             request_id = get_correlation_id() or uuid.uuid4().hex
-            server_id = tool_gateway_id if tool_gateway_id and isinstance(tool_gateway_id, str) else "unknown"
-            global_context = GlobalContext(request_id=request_id, server_id=server_id, tenant_id=None, user=app_user_email)
+            global_context = GlobalContext(request_id=request_id, server_id=context_server_id, tenant_id=None, user=app_user_email)
 
         start_time = time.monotonic()
         success = False
@@ -4106,6 +4113,26 @@ class ToolService:
                         )
                     except Exception as metric_error:
                         logger.warning(f"Failed to record tool metric: {metric_error}")
+
+                # Record server metrics ONLY when invoked through a specific virtual server
+                # When server_id is provided, it means the tool was called via a virtual server endpoint
+                # Direct tool calls via /rpc should NOT populate server metrics
+                logger.info(f"DEBUG: Checking server metrics recording - server_id={server_id}, tool_id={tool_id}, tool_gateway_id={tool_gateway_id}")
+                if tool_id and server_id:
+                    try:
+                        # First-Party
+                        from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
+
+                        metrics_buffer = get_metrics_buffer_service()
+                        # Record server metric only for the specific virtual server being accessed
+                        metrics_buffer.record_server_metric(
+                            server_id=server_id,
+                            start_time=start_time,
+                            success=success,
+                            error_message=error_message,
+                        )
+                    except Exception as metric_error:
+                        logger.warning(f"Failed to record server metric: {metric_error}")
 
                 # Log structured message with performance tracking (using local variables)
                 if success:

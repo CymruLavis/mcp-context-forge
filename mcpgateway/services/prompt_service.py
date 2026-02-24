@@ -1692,6 +1692,25 @@ class PromptService:
                     except Exception as metrics_error:
                         logger.warning(f"Failed to record prompt metric: {metrics_error}")
 
+                    # Record server metrics ONLY when invoked through a specific virtual server
+                    # When server_id is provided, it means the prompt was called via a virtual server endpoint
+                    # Direct prompt calls via /rpc should NOT populate server metrics
+                    if prompt and server_id:
+                        try:
+                            # First-Party
+                            from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
+
+                            metrics_buffer = get_metrics_buffer_service()
+                            # Record server metric only for the specific virtual server being accessed
+                            metrics_buffer.record_server_metric(
+                                server_id=server_id,
+                                start_time=start_time,
+                                success=success,
+                                error_message=error_message,
+                            )
+                        except Exception as metrics_error:
+                            logger.warning(f"Failed to record server metric: {metrics_error}")
+
                 # End database span for observability dashboard
                 if db_span_id and observability_service and not db_span_ended:
                     try:
