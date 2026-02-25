@@ -1520,7 +1520,7 @@ async def list_resource_templates() -> List[Dict[str, Any]]:
         'list'
     """
     # Extract filtering parameters from user context (same pattern as list_resources)
-    _, _, user_context = await _get_request_context_or_default()
+    server_id, _, user_context = await _get_request_context_or_default()
     user_email = user_context.get("email") if user_context else None
     token_teams = user_context.get("teams") if user_context else None
     is_admin = user_context.get("is_admin", False) if user_context else False
@@ -1540,6 +1540,7 @@ async def list_resource_templates() -> List[Dict[str, Any]]:
                     db,
                     user_email=user_email,
                     token_teams=token_teams,
+                    server_id=server_id,
                 )
                 return [template.model_dump(by_alias=True) for template in resource_templates]
             except Exception as e:

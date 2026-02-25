@@ -61,6 +61,7 @@ from mcpgateway.services.audit_trail_service import get_audit_trail_service
 from mcpgateway.services.event_service import EventService
 from mcpgateway.services.logging_service import LoggingService
 from mcpgateway.services.mcp_session_pool import get_mcp_session_pool, TransportType
+from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service
 from mcpgateway.services.metrics_cleanup_service import delete_metrics_in_batches, pause_rollup_during_purge
 from mcpgateway.services.oauth_manager import OAuthManager
 from mcpgateway.services.observability_service import current_trace_id, ObservabilityService
@@ -73,7 +74,6 @@ from mcpgateway.utils.sqlalchemy_modifier import json_contains_tag_expr
 from mcpgateway.utils.ssl_context_cache import get_cached_ssl_context
 from mcpgateway.utils.url_auth import apply_query_param_auth, sanitize_exception_message
 from mcpgateway.utils.validate_signature import validate_signature
-from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service
 
 # Plugin support imports (conditional)
 try:
@@ -1412,6 +1412,7 @@ class ResourceService:
         resource_obj: Optional[Any] = None,
         gateway_obj: Optional[Any] = None,
         server_id: Optional[str] = None,
+        record_metrics: bool = True,
     ) -> Any:
         """
         Invoke a resource via its configured gateway using SSE or StreamableHTTP transport.
@@ -1925,7 +1926,7 @@ class ResourceService:
                         error_message = str(e)
                         raise
                     finally:
-                        if resource_text:
+                        if resource_text and record_metrics:
                             try:
                                 metrics_buffer.record_resource_metric(
                                     resource_id=resource_id,
@@ -2344,6 +2345,7 @@ class ResourceService:
                         meta_data=meta_data,
                         resource_obj=resource_db,
                         gateway_obj=resource_db_gateway,
+                        record_metrics=False,
                     )
                     if resource_response:
                         setattr(content, "text", resource_response)
@@ -2359,6 +2361,7 @@ class ResourceService:
                             meta_data=meta_data,
                             resource_obj=resource_db,
                             gateway_obj=resource_db_gateway,
+                            record_metrics=False,
                         )
                         if resource_response:
                             setattr(content, "blob", resource_response)
@@ -2372,6 +2375,7 @@ class ResourceService:
                             meta_data=meta_data,
                             resource_obj=resource_db,
                             gateway_obj=resource_db_gateway,
+                            record_metrics=False,
                         )
                         if resource_response:
                             setattr(content, "text", resource_response)
@@ -3562,6 +3566,7 @@ class ResourceService:
         token_teams: Optional[List[str]] = None,
         tags: Optional[List[str]] = None,
         visibility: Optional[str] = None,
+        server_id: Optional[str] = None,
     ) -> List[ResourceTemplate]:
         """
         List resource templates with visibility-based access control.
@@ -3574,6 +3579,7 @@ class ResourceService:
                          [] = public-only (no owner access), [...] = team-scoped
             tags (Optional[List[str]]): Filter resources by tags. If provided, only resources with at least one matching tag will be returned.
             visibility (Optional[str]): Filter by visibility (private, team, public).
+            server_id (Optional[str]): Filter by server ID. If provided, only templates associated with this server will be returned.
 
         Returns:
             List of ResourceTemplate objects the user has access to
@@ -3593,6 +3599,12 @@ class ResourceService:
             True
         """
         query = select(DbResource).where(DbResource.uri_template.isnot(None))
+
+        # Filter by server_id if provided (same pattern as list_server_resources)
+        if server_id:
+            query = query.join(server_resource_association, DbResource.id == server_resource_association.c.resource_id).where(
+                server_resource_association.c.server_id == server_id
+            )
 
         if not include_inactive:
             query = query.where(DbResource.enabled)
