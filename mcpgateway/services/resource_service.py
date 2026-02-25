@@ -1927,8 +1927,6 @@ class ResourceService:
                     finally:
                         # Metrics are now recorded only in read_resource finally block
                         # This eliminates duplicate metrics and provides a single source of truth
-                        logger.debug(f"invoke_resource finally block: resource_text={'present' if resource_text else 'None/empty'}, resource_id={resource_id}, server_id={server_id}")
-
                         # End Invoke resource span for Observability dashboard
                         # NOTE: Use fresh_db_session() since the original db was released
                         # before making HTTP calls to prevent connection pool exhaustion
@@ -2383,7 +2381,7 @@ class ResourceService:
                 raise
             finally:
                 # Record metrics only if we found a resource (not for templates)
-                logger.debug(f"read_resource finally block: resource_db={'present' if resource_db else None}, resource_id={resource_id}, server_id={server_id}")
+                logger.debug(f"read_resource finally block: resource_db={'present' if resource_db else None}, resource_id={resource_db.id if resource_db else None}, server_id={server_id}")
     
                 if resource_db:
                     try:
