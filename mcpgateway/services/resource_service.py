@@ -2411,6 +2411,21 @@ class ResourceService:
                     except Exception as metrics_error:
                         logger.warning(f"Failed to record resource metric: {metrics_error}")
 
+                # Record server metrics ONLY when invoked through a specific virtual server
+                # When server_id is provided, it means the resource was called via a virtual server endpoint
+                # Direct resource calls via /rpc should NOT populate server metrics
+                if resource_db and server_id:
+                    try:
+                        # Record server metric only for the specific virtual server being accessed
+                        metrics_buffer.record_server_metric(
+                            server_id=server_id,
+                            start_time=start_time,
+                            success=success,
+                            error_message=error_message,
+                        )
+                    except Exception as metrics_error:
+                        logger.warning(f"Failed to record server metric: {metrics_error}")
+
                 # End database span for observability dashboard
                 # NOTE: Use fresh_db_session() since db may have been closed by invoke_resource
                 if db_span_id and observability_service and not db_span_ended:
