@@ -94,6 +94,8 @@ from mcpgateway.utils.sqlalchemy_modifier import json_contains_tag_expr
 from mcpgateway.utils.ssl_context_cache import get_cached_ssl_context
 from mcpgateway.utils.url_auth import apply_query_param_auth, sanitize_exception_message, sanitize_url_for_logging
 from mcpgateway.utils.validate_signature import validate_signature
+from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  
+
 
 # Cache import (lazy to avoid circular dependencies)
 _REGISTRY_CACHE = None
@@ -134,10 +136,11 @@ def _get_tool_lookup_cache():
 logging_service = LoggingService()
 logger = logging_service.get_logger(__name__)
 
-# Initialize performance tracker, structured logger, and audit trail for tool operations
+# Initialize performance tracker, structured logger, audit trail, and metrics buffer for tool operations
 perf_tracker = get_performance_tracker()
 structured_logger = get_structured_logger("tool_service")
 audit_trail = get_audit_trail_service()
+metrics_buffer = get_metrics_buffer_service()
 
 _ENCRYPTED_TOOL_HEADER_VALUE_KEY = "_mcpgateway_encrypted_header_value_v1"
 _TOOL_HEADER_DATA_KEY = "data"
@@ -4101,10 +4104,6 @@ class ToolService:
                 # Only record metrics if tool_id is valid (skip for direct_proxy mode)
                 if tool_id:
                     try:
-                        # First-Party
-                        from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                        metrics_buffer = get_metrics_buffer_service()
                         metrics_buffer.record_tool_metric(
                             tool_id=tool_id,
                             start_time=start_time,
@@ -4120,10 +4119,6 @@ class ToolService:
                 logger.info(f"DEBUG: Checking server metrics recording - server_id={server_id}, tool_id={tool_id}, tool_gateway_id={tool_gateway_id}")
                 if tool_id and server_id:
                     try:
-                        # First-Party
-                        from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                        metrics_buffer = get_metrics_buffer_service()
                         # Record server metric only for the specific virtual server being accessed
                         metrics_buffer.record_server_metric(
                             server_id=server_id,

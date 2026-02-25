@@ -52,6 +52,7 @@ from mcpgateway.utils.create_slug import slugify
 from mcpgateway.utils.metrics_common import build_top_performers
 from mcpgateway.utils.pagination import unified_paginate
 from mcpgateway.utils.sqlalchemy_modifier import json_contains_tag_expr
+from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service
 
 # Cache import (lazy to avoid circular dependencies)
 _REGISTRY_CACHE = None
@@ -108,9 +109,10 @@ def _get_registry_cache():
 logging_service = LoggingService()
 logger = logging_service.get_logger(__name__)
 
-# Initialize structured logger and audit trail for prompt operations
+# Initialize structured logger, audit trail, and metrics buffer for prompt operations
 structured_logger = get_structured_logger("prompt_service")
 audit_trail = get_audit_trail_service()
+metrics_buffer = get_metrics_buffer_service()
 
 
 class PromptError(Exception):
@@ -1679,10 +1681,6 @@ class PromptService:
                 # Record metrics only if we found a prompt
                 if prompt:
                     try:
-                        # First-Party
-                        from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                        metrics_buffer = get_metrics_buffer_service()
                         metrics_buffer.record_prompt_metric(
                             prompt_id=prompt.id,
                             start_time=start_time,
@@ -1697,10 +1695,6 @@ class PromptService:
                     # Direct prompt calls via /rpc should NOT populate server metrics
                     if prompt and server_id:
                         try:
-                            # First-Party
-                            from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                            metrics_buffer = get_metrics_buffer_service()
                             # Record server metric only for the specific virtual server being accessed
                             metrics_buffer.record_server_metric(
                                 server_id=server_id,

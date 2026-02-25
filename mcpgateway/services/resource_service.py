@@ -73,6 +73,7 @@ from mcpgateway.utils.sqlalchemy_modifier import json_contains_tag_expr
 from mcpgateway.utils.ssl_context_cache import get_cached_ssl_context
 from mcpgateway.utils.url_auth import apply_query_param_auth, sanitize_exception_message
 from mcpgateway.utils.validate_signature import validate_signature
+from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service
 
 # Plugin support imports (conditional)
 try:
@@ -106,9 +107,10 @@ def _get_registry_cache():
 logging_service = LoggingService()
 logger = logging_service.get_logger(__name__)
 
-# Initialize structured logger and audit trail for resource operations
+# Initialize structured logger, audit trail, and metrics buffer for resource operations
 structured_logger = get_structured_logger("resource_service")
 audit_trail = get_audit_trail_service()
+metrics_buffer = get_metrics_buffer_service()
 
 
 class ResourceError(Exception):
@@ -1920,10 +1922,6 @@ class ResourceService:
                     finally:
                         if resource_text:
                             try:
-                                # First-Party
-                                from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                                metrics_buffer = get_metrics_buffer_service()
                                 metrics_buffer.record_resource_metric(
                                     resource_id=resource_id,
                                     start_time=start_time,
@@ -1938,10 +1936,6 @@ class ResourceService:
                             # Direct resource calls via /rpc should NOT populate server metrics
                             if resource_id and server_id:
                                 try:
-                                    # First-Party
-                                    from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                                    metrics_buffer = get_metrics_buffer_service()
                                     # Record server metric only for the specific virtual server being accessed
                                     metrics_buffer.record_server_metric(
                                         server_id=server_id,
@@ -2403,10 +2397,6 @@ class ResourceService:
                 # Record metrics only if we found a resource (not for templates)
                 if resource_db:
                     try:
-                        # First-Party
-                        from mcpgateway.services.metrics_buffer_service import get_metrics_buffer_service  # pylint: disable=import-outside-toplevel
-
-                        metrics_buffer = get_metrics_buffer_service()
                         metrics_buffer.record_resource_metric(
                             resource_id=resource_db.id,
                             start_time=start_time,
