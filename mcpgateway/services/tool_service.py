@@ -3169,26 +3169,19 @@ class ToolService:
 
         # Reuse existing global_context from middleware or create new one
         # IMPORTANT: Use local variables (tool_gateway_id) instead of ORM object access
-        # Determine a context server id without overwriting the original function parameter
-        if server_id and isinstance(server_id, str):
-            context_server_id = server_id
-        elif tool_gateway_id and isinstance(tool_gateway_id, str):
-            context_server_id = tool_gateway_id
-        else:
-            context_server_id = "unknown"
-
         if plugin_global_context:
             global_context = plugin_global_context
-            # Only set server_id if not already present on the provided global context
-            if not getattr(global_context, "server_id", None):
-                global_context.server_id = context_server_id
-            # Propagate user email to global context for plugin access when missing
+            # Update server_id using local variable (not ORM access)
+            if tool_gateway_id and isinstance(tool_gateway_id, str):
+                global_context.server_id = tool_gateway_id
+            # Propagate user email to global context for plugin access
             if not plugin_global_context.user and app_user_email and isinstance(app_user_email, str):
                 global_context.user = app_user_email
         else:
             # Create new context (fallback when middleware didn't run)
             # Use correlation ID from context if available, otherwise generate new one
             request_id = get_correlation_id() or uuid.uuid4().hex
+            context_server_id = tool_gateway_id if tool_gateway_id and isinstance(tool_gateway_id, str) else "unknown"
             global_context = GlobalContext(request_id=request_id, server_id=context_server_id, tenant_id=None, user=app_user_email)
 
         start_time = time.monotonic()
