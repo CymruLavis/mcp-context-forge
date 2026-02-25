@@ -4578,7 +4578,7 @@ class A2AAgent(Base):
 
     # Authorizations
     auth_type: Mapped[Optional[str]] = mapped_column(String(20), default=None)  # "basic", "bearer", "headers", "oauth", "query_param" or None
-    auth_value: Mapped[Optional[Dict[str, str]]] = mapped_column(JSON)
+    auth_value: Mapped[Optional[str]] = mapped_column(Text)
     auth_query_params: Mapped[Optional[Dict[str, str]]] = mapped_column(
         JSON,
         nullable=True,
