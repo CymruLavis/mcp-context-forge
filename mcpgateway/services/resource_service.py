@@ -1411,6 +1411,7 @@ class ResourceService:
         meta_data: Optional[Dict[str, Any]] = None,  # Reserved for future MCP SDK support
         resource_obj: Optional[Any] = None,
         gateway_obj: Optional[Any] = None,
+        server_id: Optional[str] = None,
     ) -> Any:
         """
         Invoke a resource via its configured gateway using SSE or StreamableHTTP transport.
@@ -1447,6 +1448,10 @@ class ResourceService:
                 Pre-fetched DbResource object to skip the internal resource lookup query.
             gateway_obj (Optional[Any]):
                 Pre-fetched DbGateway object to skip the internal gateway lookup query.
+            server_id (Optional[str]):
+                Virtual server ID for server metrics recording. When provided, indicates
+                the resource was invoked through a specific virtual server endpoint.
+                Direct resource calls (e.g., from admin UI) should pass None.
 
         Returns:
             Any: The text content returned by the remote resource, or ``None`` if the
