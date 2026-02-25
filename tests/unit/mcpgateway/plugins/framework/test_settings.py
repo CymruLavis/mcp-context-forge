@@ -28,15 +28,15 @@ class TestPluginsSettingsDefaults:
         """Remove PLUGINS_ env vars so tests verify true defaults."""
         from mcpgateway.plugins.framework.settings import get_settings, PluginsSettings
         from pydantic_settings import SettingsConfigDict
-        
+
         # Clear cached settings before each test
         get_settings.cache_clear()
-        
+
         # Remove all PLUGINS_ env vars
         for key in list(os.environ):
             if key.startswith("PLUGINS_") or key in ("PLUGIN_CONFIG_FILE", "UNIX_SOCKET_PATH"):
                 monkeypatch.delenv(key, raising=False)
-        
+
         # Override model_config to disable .env file loading
         monkeypatch.setattr(
             PluginsSettings,
