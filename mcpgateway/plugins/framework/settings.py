@@ -294,7 +294,6 @@ class PluginsHttpClientSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="PLUGINS_", env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
-
 class PluginsCliSettings(BaseSettings):
     """Lightweight settings for mcpplugins CLI configuration."""
 
@@ -453,7 +452,6 @@ def get_http_client_settings() -> PluginsHttpClientSettings:
         PluginsHttpClientSettings: A cached instance.
     """
     return PluginsHttpClientSettings()
-
 
 
 @lru_cache()

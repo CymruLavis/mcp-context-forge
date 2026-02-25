@@ -29,9 +29,13 @@ Examples:
 
 # Standard
 import asyncio
+import copy
 import logging
 import threading
 from typing import Any, Optional, Union
+
+# Third-Party
+from pydantic import BaseModel
 
 # First-Party
 from mcpgateway.plugins.framework.base import HookRef, Plugin
@@ -194,12 +198,14 @@ class PluginExecutor:
             # payload before handing it to the plugin.  The plugin operates on
             # the copy, so in-place nested mutations (e.g. payload.args[k]=v)
             # cannot pollute the live chain.  model_copy(deep=True) is used
-            # instead of copy.deepcopy to stay within Pydantic's serialisation
-            # boundary.  The untouched effective_payload serves as the clean
-            # baseline for the policy diff.
-            effective_payload = current_payload or payload
+            # for Pydantic models; copy.deepcopy handles plain dicts that
+            # arrive via cross-type hooks (e.g. http_auth_resolve_user).
+            effective_payload = current_payload if current_payload is not None else payload
             needs_isolation = policy or self.default_hook_policy == DefaultHookPolicy.DENY
-            plugin_input = effective_payload.model_copy(deep=True) if needs_isolation else effective_payload
+            if needs_isolation:
+                plugin_input = effective_payload.model_copy(deep=True) if isinstance(effective_payload, BaseModel) else copy.deepcopy(effective_payload)
+            else:
+                plugin_input = effective_payload
 
             # Execute plugin with timeout protection
             result = await self.execute_plugin(
@@ -214,8 +220,8 @@ class PluginExecutor:
             # Apply policy-based controlled merge (per-plugin)
             if result.modified_payload is not None:
                 if policy:
-                    if isinstance(result.modified_payload, type(effective_payload)):
-                        # Same-type payload — apply field-level policy filtering
+                    if isinstance(result.modified_payload, type(effective_payload)) and isinstance(effective_payload, BaseModel):
+                        # Same-type BaseModel payload — apply field-level policy filtering
                         filtered = apply_policy(
                             effective_payload,
                             result.modified_payload,
