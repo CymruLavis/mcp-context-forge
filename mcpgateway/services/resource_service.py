@@ -2382,7 +2382,7 @@ class ResourceService:
             finally:
                 # Record metrics only if we found a resource (not for templates)
                 logger.debug(f"read_resource finally block: resource_db={'present' if resource_db else None}, resource_id={resource_db.id if resource_db else None}, server_id={server_id}")
-    
+
                 if resource_db:
                     try:
                         metrics_buffer.record_resource_metric(
@@ -3584,9 +3584,7 @@ class ResourceService:
 
         # Filter by server_id if provided (same pattern as list_server_resources)
         if server_id:
-            query = query.join(server_resource_association, DbResource.id == server_resource_association.c.resource_id).where(
-                server_resource_association.c.server_id == server_id
-            )
+            query = query.join(server_resource_association, DbResource.id == server_resource_association.c.resource_id).where(server_resource_association.c.server_id == server_id)
 
         if not include_inactive:
             query = query.where(DbResource.enabled)
