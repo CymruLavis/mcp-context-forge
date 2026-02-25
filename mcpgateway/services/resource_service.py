@@ -1412,7 +1412,6 @@ class ResourceService:
         resource_obj: Optional[Any] = None,
         gateway_obj: Optional[Any] = None,
         server_id: Optional[str] = None,
-        record_metrics: bool = True,
     ) -> Any:
         """
         Invoke a resource via its configured gateway using SSE or StreamableHTTP transport.
@@ -1926,48 +1925,26 @@ class ResourceService:
                         error_message = str(e)
                         raise
                     finally:
-                        if resource_text and record_metrics:
+                        # Metrics are now recorded only in read_resource finally block
+                        # This eliminates duplicate metrics and provides a single source of truth
+                        logger.debug(f"invoke_resource finally block: resource_text={'present' if resource_text else 'None/empty'}, resource_id={resource_id}, server_id={server_id}")
+
+                        # End Invoke resource span for Observability dashboard
+                        # NOTE: Use fresh_db_session() since the original db was released
+                        # before making HTTP calls to prevent connection pool exhaustion
+                        if db_span_id and observability_service and not db_span_ended:
                             try:
-                                metrics_buffer.record_resource_metric(
-                                    resource_id=resource_id,
-                                    start_time=start_time,
-                                    success=success,
-                                    error_message=error_message,
-                                )
-                            except Exception as metrics_error:
-                                logger.warning(f"Failed to invoke resource metric: {metrics_error}")
-
-                            # Record server metrics ONLY when invoked through a specific virtual server
-                            # When server_id is provided, it means the resource was called via a virtual server endpoint
-                            # Direct resource calls via /rpc should NOT populate server metrics
-                            if resource_id and server_id:
-                                try:
-                                    # Record server metric only for the specific virtual server being accessed
-                                    metrics_buffer.record_server_metric(
-                                        server_id=server_id,
-                                        start_time=start_time,
-                                        success=success,
-                                        error_message=error_message,
+                                with fresh_db_session() as fresh_db:
+                                    observability_service.end_span(
+                                        db=fresh_db,
+                                        span_id=db_span_id,
+                                        status="ok" if success else "error",
+                                        status_message=error_message if error_message else None,
                                     )
-                                except Exception as metrics_error:
-                                    logger.warning(f"Failed to record server metric: {metrics_error}")
-
-                            # End Invoke resource span for Observability dashboard
-                            # NOTE: Use fresh_db_session() since the original db was released
-                            # before making HTTP calls to prevent connection pool exhaustion
-                            if db_span_id and observability_service and not db_span_ended:
-                                try:
-                                    with fresh_db_session() as fresh_db:
-                                        observability_service.end_span(
-                                            db=fresh_db,
-                                            span_id=db_span_id,
-                                            status="ok" if success else "error",
-                                            status_message=error_message if error_message else None,
-                                        )
-                                    db_span_ended = True
-                                    logger.debug(f"✓ Ended invoke.resource span: {db_span_id}")
-                                except Exception as e:
-                                    logger.warning(f"Failed to end observability span for invoking resource: {e}")
+                                db_span_ended = True
+                                logger.debug(f"✓ Ended invoke.resource span: {db_span_id}")
+                            except Exception as e:
+                                logger.warning(f"Failed to end observability span for invoking resource: {e}")
 
     async def read_resource(
         self,
@@ -2336,6 +2313,7 @@ class ResourceService:
                 # ResourceContent is the legacy model for backwards compatibility
 
                 if isinstance(content, (ResourceContent, ResourceContents, TextContent)):
+                    # Metrics are recorded in read_resource finally block for all resources
                     resource_response = await self.invoke_resource(
                         db=db,
                         resource_id=getattr(content, "id"),
@@ -2345,12 +2323,13 @@ class ResourceService:
                         meta_data=meta_data,
                         resource_obj=resource_db,
                         gateway_obj=resource_db_gateway,
-                        record_metrics=False,
+                        server_id=server_id,
                     )
                     if resource_response:
                         setattr(content, "text", resource_response)
                 # If content is any object that quacks like content
                 elif hasattr(content, "text") or hasattr(content, "blob"):
+                    # Metrics are recorded in read_resource finally block for all resources
                     if hasattr(content, "blob"):
                         resource_response = await self.invoke_resource(
                             db=db,
@@ -2361,7 +2340,7 @@ class ResourceService:
                             meta_data=meta_data,
                             resource_obj=resource_db,
                             gateway_obj=resource_db_gateway,
-                            record_metrics=False,
+                            server_id=server_id,
                         )
                         if resource_response:
                             setattr(content, "blob", resource_response)
@@ -2375,7 +2354,7 @@ class ResourceService:
                             meta_data=meta_data,
                             resource_obj=resource_db,
                             gateway_obj=resource_db_gateway,
-                            record_metrics=False,
+                            server_id=server_id,
                         )
                         if resource_response:
                             setattr(content, "text", resource_response)
@@ -2404,6 +2383,8 @@ class ResourceService:
                 raise
             finally:
                 # Record metrics only if we found a resource (not for templates)
+                logger.debug(f"read_resource finally block: resource_db={'present' if resource_db else None}, resource_id={resource_id}, server_id={server_id}")
+    
                 if resource_db:
                     try:
                         metrics_buffer.record_resource_metric(
@@ -2420,6 +2401,7 @@ class ResourceService:
                 # Direct resource calls via /rpc should NOT populate server metrics
                 if resource_db and server_id:
                     try:
+                        logger.debug(f"Recording server metric for server_id={server_id}, resource_id={resource_db.id}, success={success}")
                         # Record server metric only for the specific virtual server being accessed
                         metrics_buffer.record_server_metric(
                             server_id=server_id,
@@ -2429,6 +2411,8 @@ class ResourceService:
                         )
                     except Exception as metrics_error:
                         logger.warning(f"Failed to record server metric: {metrics_error}")
+                else:
+                    logger.debug(f"Skipping server metric: resource_db={resource_db is not None}, server_id={server_id}")
 
                 # End database span for observability dashboard
                 # NOTE: Use fresh_db_session() since db may have been closed by invoke_resource
